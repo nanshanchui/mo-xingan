@@ -122,6 +122,7 @@
     }
     .photo { position: absolute; inset: 0; }
     .pet:has(.photo:not([hidden])) .face { display: none !important; }
+    .stage[data-cutout]::before { display: none; }
     .oshi-tip { display: none; margin: 6px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--soft); }
     body[data-skin="oshi"] .oshi-tip { display: block; }
     .hand {
