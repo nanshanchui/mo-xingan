@@ -1215,7 +1215,12 @@
     }
 
     function saveMedia(next) {
-      if (!writeSaved(version.key + '-media', next)) return false;
+      let ok = writeSaved(version.key + '-media', next);
+      if (!ok && next.original) {
+        next = { ...next, original: '' };
+        ok = writeSaved(version.key + '-media', next);
+      }
+      if (!ok) return false;
       media = next;
       renderMedia();
       return true;
@@ -1230,7 +1235,7 @@
         canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
         canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
         canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-        const encoded = canvas.toDataURL('image/webp', .84);
+        const encoded = canvas.toDataURL('image/jpeg', .82);
         if (!encoded.startsWith('data:image/')) throw new Error();
         return encoded;
       } catch (_) {
