@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#291913">
+  <title>摸一摸你的心肝</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #2f1b12;
+      --gold: #f9d698;
+      --soft: #dec09a;
+      --line: #ebbc792e;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--gold);
+      background: radial-gradient(ellipse at 50% 22%, #513021 0%, #332018 48%, #221510 100%) fixed;
+      font: 15px/1.5 system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    body[data-edition="oshi"] {
+      background: radial-gradient(ellipse at 50% 22%, #4b2a54 0%, #2f1a3a 48%, #1d1026 100%) fixed;
+    }
+    button { font: inherit; cursor: pointer; touch-action: manipulation; }
+    button:focus-visible { outline: 2px solid #ffe6ad; outline-offset: 4px; }
+    button:disabled { cursor: default; }
+    [hidden] { display: none !important; }
+    .page {
+      width: 100%;
+      max-width: 450px;
+      margin: 0 auto;
+      padding: 17px 23px 26px;
+      padding-top: max(17px, env(safe-area-inset-top));
+      padding-bottom: max(26px, env(safe-area-inset-bottom));
+    }
+    .top { display: flex; align-items: center; justify-content: space-between; }
+    .top-right { display: flex; gap: 8px; }
+    .mark, .sound { display: inline-flex; align-items: center; gap: 7px; }
+    .mark::after { content: ""; width: 26px; height: 1px; background: #d1a36370; }
+    .mark svg { width: 17px; height: 17px; color: #dfa766; }
+    body[data-edition="oshi"] .mark svg { color: #f2a9d8; }
+    .sound {
+      height: 36px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      color: var(--gold);
+      background: #26160f66;
+      font-size: 12px;
+    }
+    .sound svg { width: 15px; height: 15px; }
+    .sound .slash, .sound[data-off] .waves { display: none; }
+    .sound[data-off] .slash { display: initial; }
+    .hero { text-align: center; }
+    h1, h2, p { margin: 0; }
+    h1 {
+      margin-top: 17px;
+      font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif;
+      font-size: 30px;
+      font-size: clamp(27px, 8.2vw, 37px);
+      line-height: 1.3;
+      letter-spacing: .05em;
+      color: #ffe3ad;
+    }
+    body[data-edition="oshi"] h1 { color: #ffd9f0; }
+    .intro { margin-top: 7px; color: var(--soft); font-size: 13px; letter-spacing: .08em; }
+    .stage {
+      --diameter: 190px;
+      --diameter: clamp(168px, 52vw, 218px);
+      position: relative;
+      isolation: isolate;
+      display: grid;
+      place-items: center;
+      height: calc(var(--diameter) + 54px);
+      margin: 9px 0 2px;
+    }
+    .stage::before, .stage::after {
+      position: absolute;
+      z-index: -1;
+      width: calc(var(--diameter) + 29px);
+      aspect-ratio: 1;
+      border: 1px solid #eabb7936;
+      border-radius: 50%;
+      content: "";
+      pointer-events: none;
+    }
+    .stage::after {
+      width: calc(var(--diameter) + 49px);
+      border-color: #eabb7921;
+      border-style: dashed;
+    }
+    body[data-edition="oshi"] .stage::before { border-color: #f2a9d836; }
+    body[data-edition="oshi"] .stage::after { border-color: #f2a9d821; }
+    .sparkles { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .pet {
+      position: relative;
+      display: block;
+      width: var(--diameter);
+      height: var(--diameter);
+      padding: 5px;
+      border: 1px solid #efc27c;
+      border-radius: 50%;
+      background: #825134;
+      box-shadow: 0 12px 30px #180c0875, 0 0 23px #ffc77d29;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body[data-edition="oshi"] .pet {
+      border-color: #f2a9d8;
+      background: #6d3a72;
+      box-shadow: 0 12px 30px #160a1875, 0 0 23px #ff9fdc29;
+    }
+    .face, .photo {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 50%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    .fs1 { stop-color: #ffedbd; }
+    .fs2 { stop-color: #f7ce83; }
+    .fs3 { stop-color: #e9a662; }
+    body[data-edition="oshi"] .fs1 { stop-color: #ffe9f7; }
+    body[data-edition="oshi"] .fs2 { stop-color: #f9c6e8; }
+    body[data-edition="oshi"] .fs3 { stop-color: #eda1d4; }
+    #ears path { fill: #e9a662; }
+    #ears .ear-in { fill: #f6b98a; }
+    body[data-edition="oshi"] #ears path { fill: #eda1d4; }
+    body[data-edition="oshi"] #ears .ear-in { fill: #ffc7ea; }
+    .hand {
+      position: absolute;
+      z-index: 2;
+      top: -26px;
+      left: 50%;
+      width: 132px;
+      height: auto;
+      opacity: 0;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 5px #28150d60);
+    }
+    .stage.patting .hand { animation: pat .54s ease-in-out both; }
+    .stage.patting .pet { animation: squash .54s both; }
+    @keyframes pat {
+      0% { opacity: 0; transform: translate(-18%, -45px) rotate(15deg); }
+      17% { opacity: 1; }
+      43%, 53% { opacity: 1; transform: translate(-29%, 1px) rotate(-5deg); }
+      80% { opacity: .8; }
+      100% { opacity: 0; transform: translate(-17%, -42px) rotate(13deg); }
+    }
+    @keyframes squash {
+      0%, 25%, 100% { transform: scale(1); }
+      45%, 52% { transform: translateY(5px) scale(1.046, .92); }
+      72% { transform: translateY(-2px) scale(.985, 1.035); }
+    }
+    .float {
+      position: absolute;
+      z-index: 3;
+      top: 38%;
+      left: 50%;
+      color: #ffbdab;
+      font-size: 23px;
+      font-weight: 700;
+      text-shadow: 0 2px 8px #31140dcc;
+      pointer-events: none;
+      animation: float-up .72s ease-out both;
+    }
+    body[data-edition="oshi"] .float { color: #ffb3e2; }
+    @keyframes float-up {
+      0% { opacity: 0; transform: translate(40px, 5px) scale(.75); }
+      21% { opacity: 1; }
+      100% { opacity: 0; transform: translate(68px, -68px) scale(1.1); }
+    }
+    .actions { display: flex; justify-content: center; gap: 9px; flex-wrap: wrap; }
+    .mini-link { margin-top: 7px; padding: 2px 6px; border: 0; background: none; color: var(--soft); font-size: 12px; text-decoration: underline; }
+    .action {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--gold);
+      background: #2f1d16;
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .action svg { width: 17px; height: 17px; flex: none; }
+    .primary { border-color: #ffdfa2; color: var(--ink); background: linear-gradient(#ffe0a5, #edba74); }
+    body[data-edition="oshi"] .primary { border-color: #ffe0f4; background: linear-gradient(#ffd3ec, #f19bd2); }
+    .action:active, .sound:active { transform: translateY(1px); }
+    .status { margin-top: 7px; color: #ffc3b5; font-size: 12px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: #2517108c;
+      box-shadow: 0 8px 24px #190e0b24;
+    }
+    .stats { margin-top: 22px; padding: 14px 16px 13px; }
+    .stats-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .tally { display: flex; align-items: baseline; gap: 9px; }
+    .count { color: #ffdfa3; font: 700 30px/1 Georgia, serif; font-variant-numeric: tabular-nums; }
+    body[data-edition="oshi"] .count { color: #ffd3ec; }
+    .caption { color: var(--soft); font-size: 12px; }
+    .title {
+      flex: none;
+      padding: 4px 11px;
+      border: 1px solid #ebb76c40;
+      border-radius: 99px;
+      background: #ab733929;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    body[data-edition="oshi"] .title { border-color: #f2a9d840; background: #b06fc929; }
+    progress {
+      display: block;
+      width: 100%;
+      height: 6px;
+      margin: 13px 0 7px;
+      overflow: hidden;
+      border: 0;
+      border-radius: 99px;
+      appearance: none;
+      background: #644431;
+      color: #f4c782;
+    }
+    progress::-webkit-progress-bar { background: #644431; border-radius: 99px; }
+    progress::-webkit-progress-value { background: linear-gradient(90deg, #cf874f, #ffda92); border-radius: 99px; }
+    progress::-moz-progress-bar { background: linear-gradient(90deg, #cf874f, #ffda92); border-radius: 99px; }
+    body[data-edition="oshi"] progress::-webkit-progress-value { background: linear-gradient(90deg, #b06fc9, #ffa9dd); }
+    body[data-edition="oshi"] progress::-moz-progress-bar { background: linear-gradient(90deg, #b06fc9, #ffa9dd); }
+    .fortune { margin-top: 11px; padding: 11px 13px; }
+    .fortune-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .fortune h2 { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .fortune h2 svg { width: 28px; height: 28px; padding: 5px; color: #f6c581; background: #98703f36; border-radius: 8px; }
+    .draw { min-height: 36px; padding: 5px 11px; background: #ab733929; }
+    .draw:disabled { color: var(--soft); }
+    .wish { margin: 9px 2px 1px; padding: 9px 2px 1px; border-top: 1px solid var(--line); color: #ffe1a9; font-size: 13px; }
+    body[data-edition="oshi"] .wish { color: #ffd9f0; }
+    .picker {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      overflow-y: auto;
+      background: radial-gradient(ellipse at 50% 22%, #46302a 0%, #2c1c17 52%, #1d110c 100%);
+      padding: 15vh 24px 40px;
+      text-align: center;
+    }
+    .picker h1 { margin-top: 0; }
+    .pick {
+      display: block;
+      width: 100%;
+      max-width: 340px;
+      margin: 14px auto 0;
+      padding: 17px 18px;
+      border-radius: 18px;
+      text-align: left;
+      color: var(--gold);
+    }
+    .pick b { display: block; font-size: 19px; letter-spacing: .04em; }
+    .pick span { display: block; margin-top: 3px; font-size: 12.5px; color: var(--soft); }
+    .pick-star { border: 1px solid #ffdfa2; background: linear-gradient(135deg, #4a2c17, #2f1d16); }
+    .pick-oshi { border: 1px solid #f2a9d8; background: linear-gradient(135deg, #47264d, #2a1833); color: #ffd9f0; }
+    .pick-oshi span { color: #d9b8e6; }
+    .picker .note { margin-top: 18px; color: var(--soft); font-size: 12px; }
+    @media (prefers-reduced-motion: reduce) {
+      .stage.patting .pet { animation: none; }
+      .stage.patting .hand { animation: touch-still .42s both; }
+      .float { animation: touch-still .55s both; transform: translateX(50px); }
+      @keyframes touch-still {
+        0%, 100% { opacity: 0; }
+        25%, 75% { opacity: 1; }
+      }
+    }
+  </style>
+</head>
+<body data-edition="star">
+  <div class="picker" id="picker" hidden>
+    <h1>摸一摸你的心肝</h1>
+    <p class="intro">先选一版，再开始摸头</p>
+    <button class="pick pick-star" type="button" data-ed="star">
+      <b>追星版</b>
+      <span>本命爱豆 · 饭圈签文 · 粉籍称号</span>
+    </button>
+    <button class="pick pick-oshi" type="button" data-ed="oshi">
+      <b>自推版</b>
+      <span>动漫游戏 · 自家 OC · 二次元签文</span>
+    </button>
+    <p class="note">两版的次数和称号各算各的，随时能切换</p>
+  </div>
+
+  <main class="page">
+    <div class="top">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21 3.8 13a5.3 5.3 0 0 1 7.5-7.5l.7.7.7-.7a5.3 5.3 0 0 1 7.5 7.5Z"/></svg>
+      </span>
+      <div class="top-right">
+        <button class="sound" id="switch" type="button">切换版本</button>
+        <button class="sound" id="sound" type="button" aria-label="摸头音效" aria-pressed="true">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9v6h4l5 4V5L8 9H4Z"/><path class="waves" d="M16 9a4 4 0 0 1 0 6m2-8a7 7 0 0 1 0 10"/><path class="slash" d="m16 10 5 5m0-5-5 5"/>
+          </svg>
+          <span id="sound-label">声音开</span>
+        </button>
+      </div>
+    </div>
+
+    <section class="hero" aria-labelledby="game-title">
+      <h1 id="game-title">摸一摸你的心肝</h1>
+      <p class="intro" id="intro">轻点本命的脸，摸摸头</p>
+      <div class="stage" id="stage">
+        <svg class="sparkles" aria-hidden="true" viewBox="0 0 400 270" preserveAspectRatio="none" fill="#eeb776">
+          <path d="M57 83q0 9 9 9-9 0-9 9 0-9-9-9 9 0 9-9Z" opacity=".75"/>
+          <path d="M344 147q0 12 12 12-12 0-12 12 0-12-12-12 12 0 12-12Z" opacity=".8"/>
+          <path d="M306 39q0 6 6 6-6 0-6 6 0-6-6-6 6 0 6-6Z" opacity=".7"/>
+          <circle cx="66" cy="184" r="2" opacity=".6"/><circle cx="339" cy="101" r="1.8" opacity=".7"/><circle cx="103" cy="223" r="1.6" opacity=".55"/>
+        </svg>
+        <button class="pet" id="pet" type="button" aria-label="摸摸头">
+          <svg class="face" id="face" aria-hidden="true" viewBox="0 0 220 220">
+            <defs>
+              <radialGradient id="face-light" cx=".34" cy=".24" r=".84">
+                <stop class="fs1" offset="0"/><stop class="fs2" offset=".72"/><stop class="fs3" offset="1"/>
+              </radialGradient>
+            </defs>
+            <g id="ears" hidden>
+              <path d="M42 68 L56 10 L98 40 Z"/>
+              <path d="M178 68 L164 10 L122 40 Z"/>
+              <path class="ear-in" d="M57 55 L63 27 L85 42 Z"/>
+              <path class="ear-in" d="M163 55 L157 27 L135 42 Z"/>
+            </g>
+            <circle cx="110" cy="110" r="110" fill="url(#face-light)"/>
+            <circle cx="110" cy="110" r="103" fill="none" stroke="#fff6d4" stroke-opacity=".47"/>
+            <ellipse cx="66" cy="128" rx="19" ry="10" fill="#ec9a79" opacity=".6"/>
+            <ellipse cx="154" cy="128" rx="19" ry="10" fill="#ec9a79" opacity=".6"/>
+            <path d="M68 108q10-14 20 0m44 0q10-14 20 0m-59 21q17 24 34 0" fill="none" stroke="#71452b" stroke-width="5.5" stroke-linecap="round"/>
+            <path d="M110 65c-9-4-11-13-5-15 3-1 5 1 5 3 1-2 3-4 6-3 6 2 3 11-6 15Z" fill="#d88466" opacity=".85"/>
+          </svg>
+          <img class="photo" id="photo" alt="" draggable="false" hidden>
+        </button>
+        <svg class="hand" aria-hidden="true" viewBox="0 0 140 86" fill="none">
+          <path d="m122 7-23 12-16 3c-11 1-16 5-22 9l-32 8c-8 2-10 10-2 13L13 56c-8 2-8 12 0 14l22-3c-6 5-3 13 4 13l25-6c9 3 16 1 25-5l19-19 24-13c6-5 1-25-10-30Z"
+                fill="#ffd3a7" stroke="#79442f" stroke-width="3.2" stroke-linejoin="round"/>
+          <path d="m28 52 25-7m-18 22 28-9m3 15 10-8m-6-33c-7 4-12 8-14 13" stroke="#a65f46" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="m99 19 23-12c8 3 14 17 13 25-1 4-5 6-10 9-3-13-12-21-26-22Z" fill="#d88768" stroke="#79442f" stroke-width="3.2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="actions">
+        <button class="action primary" id="pick-photo" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9" r="1.3"/><path d="m5 17 5-4 3 2 4-5 4 5"/>
+          </svg>
+          上传图片
+        </button>
+        <button class="action" id="pick-audio" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 17V6l11-2v11M9 9l11-2"/><ellipse cx="6" cy="17" rx="3" ry="2.5"/><ellipse cx="17" cy="15" rx="3" ry="2.5"/>
+          </svg>
+          <span id="audio-label">上传音效</span>
+        </button>
+        <button class="action" id="pick-voice" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
+          </svg>
+          <span id="voice-label">上传语音</span>
+        </button>
+        <input id="photo-input" type="file" accept="image/*" hidden>
+        <input id="audio-input" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" hidden>
+        <input id="voice-input" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" hidden>
+      </div>
+      <button class="mini-link" id="clear-voice" type="button" hidden>清空已存语音</button>
+      <p class="status" id="status" role="status" hidden></p>
+    </section>
+
+    <section class="card stats" aria-label="摸头次数和称号">
+      <div class="stats-top">
+        <div class="tally"><strong class="count" id="count">0</strong><span class="caption">摸头次数</span></div>
+        <span class="title" id="title">新入坑</span>
+      </div>
+      <progress id="progress" value="0" max="100" aria-label="到下一称号的进度"></progress>
+      <p class="caption" id="next-title">再摸 100 次升为「颜粉」</p>
+    </section>
+
+    <section class="card fortune" aria-labelledby="fortune-title">
+      <div class="fortune-top">
+        <h2 id="fortune-title">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m8 19 4-14a2 2 0 0 1 2.5-1.4l3 .9a2 2 0 0 1 1.4 2.5l-4 14a1 1 0 0 1-1.2.7l-5-1.5a1 1 0 0 1-.7-1.2Z"/>
+            <path d="m12 17 3-9M5 5v4M3 7h4"/>
+          </svg>
+          每日一签
+        </h2>
+        <button class="action draw" id="draw" type="button">抽一签</button>
+      </div>
+      <p class="wish" id="wish" role="status" hidden></p>
+    </section>
+  </main>
+  <audio id="pat-audio" preload="auto" src="data:audio/wav;base64,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rv+F/2//c/+S/8X/BABCAHMAjACMAHMASAASANr/qP+E/3T/fv+g/9T/EgBLAHUAiACCAGYAOgAGANH/o/+E/3r/if+u/+P/HQBSAHYAgwB5AFoALQD6/8j/n/+G/4H/lP+7//D/KABXAHUAfQBvAE4AIQDw/8H/nP+I/4n/n//I//z/MQBbAHMAdgBlAEIAFgDn/7v/m/+M/5H/qv/V/wcAOABeAHEAbwBbADcADADf/7f/m/+Q/5n/tv/g/xEAPgBfAG0AaABRAC0AAgDX/7P/nP+V/6L/wP/r/xoAQwBfAGkAYABHACMA+f/R/7H/nf+b/6v/y//1/yIARwBeAGQAWAA9ABkA8f/M/6//oP+h/7T/1f///ygASgBdAF8AUAA0ABAA6v/I/67/o/+n/73/3/8HAC4ASwBaAFkASAArAAgA5P/E/67/pv+u/8X/6P8PADMATABXAFMAQAAjAAEA3v/C/6//qv+1/87/8P8WADYATABUAE0AOAAbAPr/2v/A/7H/r/+8/9b/+P8bADkATABQAEYAMQAUAPT/1v+//7P/tP/D/97///8hADsASgBMAEAAKgANAO7/0v++/7X/uf/K/+b/BgAlADwASABHADoAIwAGAOn/0P++/7j/v//R/+3/DAAoAD0ARgBCADMAHAAAAOX/zv+//7z/xP/Y//T/EQArADwAQgA8ACwAFQD7/+L/z//D/8P/zf/h//r/FAAqADgAOwA0ACQADwD3/+H/0f/J/8r/1f/o////FwApADMANAAsAB0ACQD0/+H/1P/O/9H/3P/v/wQAGAAnAC8ALgAlABYABADy/+L/1//T/9j/4//0/wcAGAAlACoAKAAfABEAAQDw/+P/2v/Z/97/6f/5/wkAGAAiACUAIgAZAAwA/v/w/+X/3v/e/+P/7v/8/wsAFwAfACEAHQAUAAgA+//w/+f/4v/j/+n/8////wwAFgAbABwAGAAQAAUA+v/w/+n/5v/n/+3/9/8CAAwAFAAYABgAEwAMAAIA+f/x/+v/6v/s//H/+v8DAAwAEgAVABQADwAJAAEA+f/y/+7/7f/w//X//P8EAAsAEAARABAADAAGAP//+f/0//H/8f/z//j//v8FAAoADQAOAA0ACQAEAP7/+f/1//P/9P/2//r/AAAFAAkACwALAAkABgACAP7/+v/3//b/9//5//z/AAAEAAcACAAIAAcABAABAP7/+//5//n/+f/7//7/AQAEAAUABgAGAAUAAwAAAP7//P/7//v//P/9////AQADAAQABAAEAAMAAQAAAP///v/9//3//v///wAAAQABAAIAAgACAAEAAAAAAP////////////8AAAAAAAAAAA=="></audio>
+  <audio id="voice-audio" preload="auto"></audio>
+
+  <script>
+    const byId = (id) => document.getElementById(id);
+    const pet = byId('pet');
+    const stage = byId('stage');
+    const audio = byId('pat-audio');
+    const defaultAudio = audio.getAttribute('src');
+    const sound = byId('sound');
+    const draw = byId('draw');
+    const wish = byId('wish');
+    const photo = byId('photo');
+    const photoInput = byId('photo-input');
+    const audioInput = byId('audio-input');
+    const voiceAudio = byId('voice-audio');
+    const voiceInput = byId('voice-input');
+    const picker = byId('picker');
+    const EDITIONS = {
+      star: {
+        storage: 'xingan-star-v1',
+        photoKey: 'xingan-star-photo',
+        audioKey: 'xingan-star-audio',
+        voiceKey: 'xingan-star-voice',
+        intro: '轻点本命的脸，摸摸头',
+        titles: [
+          [0, '新入坑'], [100, '颜粉'], [300, '妈妈粉'], [800, '女友粉'],
+          [2000, '一体机'], [5000, '梦女'], [12000, '绯闻女友'], [30000, '老婆']
+        ],
+        wishes: [
+          '你担今天也在为你闪闪发光。',
+          '今日宜蹲直播，会有意想不到的营业。',
+          '本命今日份的饭撒，马上就轮到你。',
+          '抽到这张签的人，本周会被翻牌。',
+          '今日宜存图，甜度超标预警。',
+          '今天的等待，都会变成明天的见面。',
+          '宜表白：你的喜欢，他都收得到。',
+          '今日宜许愿，演唱会的票会向你走来。',
+          '摸摸头的人，离见到本命又近了一天。',
+          '宜刷直拍，快乐会翻倍。',
+          '你的应援，他在台上看得见。',
+          '今天欧气满满，适合抢票抽奖。'
+        ]
+      },
+      oshi: {
+        storage: 'xingan-oshi-v1',
+        photoKey: 'xingan-oshi-photo',
+        audioKey: 'xingan-oshi-audio',
+        voiceKey: 'xingan-oshi-voice',
+        intro: '轻点你推的脸，摸摸头',
+        titles: [
+          [0, '新入坑'], [100, '有点上头'], [300, '单推人'], [800, '本命推'],
+          [2000, '亲妈本妈'], [5000, '死忠守护'], [12000, '纸片人本命'], [30000, '次元壁粉碎者']
+        ],
+        wishes: [
+          '今日宜抽卡，欧气守恒，下一发必金。',
+          '你推在次元那边，也在想你。',
+          '今日宜买谷，快乐无价。',
+          '宜产粮：太太，今天适合画图写文。',
+          '次元壁今天格外薄，宜许愿。',
+          '你推的新物料正在赶来的路上。',
+          '宜蹲官宣，会有惊喜掉落。',
+          '单推人的运气，不会太差。',
+          '今天适合给自家娃添件新衣服。',
+          '宜表白：隔着屏幕，他也收得到。',
+          '摸一摸，快乐充能完毕。',
+          '你喜欢的样子，他刚好都有。'
+        ]
+      }
+    };
+    const EDITION_KEY = 'xingan-edition';
+
+    function lsGet(key) {
+      try { return localStorage.getItem(key); } catch (_) { return null; }
+    }
+    function lsSet(key, value) {
+      try { localStorage.setItem(key, value); return true; } catch (_) { return false; }
+    }
+    function lsRemove(key) {
+      try { localStorage.removeItem(key); } catch (_) {}
+    }
+
+    let edition = 'star';
+    let cfg = EDITIONS.star;
+    let state = null;
+    let storageAvailable = true;
+
+    function titleIndex(count) {
+      let index = cfg.titles.length - 1;
+      while (count < cfg.titles[index][0]) index--;
+      return index;
+    }
+
+    function normalize(saved) {
+      const count = saved && Number.isSafeInteger(saved.count) && saved.count >= 0 ? saved.count : 0;
+      return { count, title: cfg.titles[titleIndex(count)][1], muted: !!(saved && saved.muted), daily: saved && saved.daily };
+    }
+
+    function readState() {
+      try { return JSON.parse(localStorage.getItem(cfg.storage)); }
+      catch (_) { return null; }
+    }
+
+    function refresh() {
+      const saved = storageAvailable && readState();
+      if (saved) state = normalize(saved);
+    }
+
+    function save() {
+      if (!lsSet(cfg.storage, JSON.stringify(state))) storageAvailable = false;
+    }
+
+    function renderStats() {
+      const index = titleIndex(state.count);
+      const next = cfg.titles[index + 1];
+      const progress = byId('progress');
+      byId('count').textContent = state.count.toLocaleString('zh-CN');
+      byId('title').textContent = state.title;
+      progress.max = next ? next[0] - cfg.titles[index][0] : 1;
+      progress.value = next ? state.count - cfg.titles[index][0] : 1;
+      byId('next-title').textContent = next ? `再摸 ${next[0] - state.count} 次升为「${next[1]}」` : '已达最高称号';
+    }
+
+    function renderSound() {
+      sound.toggleAttribute('data-off', state.muted);
+      sound.setAttribute('aria-pressed', String(!state.muted));
+      byId('sound-label').textContent = state.muted ? '声音关' : '声音开';
+    }
+
+    function today() {
+      const now = new Date();
+      return [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-');
+    }
+
+    function drawnToday(day) {
+      const daily = state.daily;
+      return !!daily && daily.day === day && Number.isInteger(daily.index) && !!cfg.wishes[daily.index];
+    }
+
+    function renderFortune() {
+      const drawn = drawnToday(today());
+      draw.disabled = drawn;
+      draw.textContent = drawn ? '今日已抽' : '抽一签';
+      wish.textContent = drawn ? cfg.wishes[state.daily.index] : '';
+      wish.hidden = !drawn;
+    }
+
+    let midnightTimer;
+    function updateDay() {
+      clearTimeout(midnightTimer);
+      renderFortune();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 100);
+      midnightTimer = setTimeout(updateDay, Math.max(100, midnight - Date.now()));
+    }
+
+    function showStatus(message) {
+      const status = byId('status');
+      status.textContent = message;
+      status.hidden = !message;
+    }
+
+    function playPatSound() {
+      if (state.muted) return;
+      audio.currentTime = 0;
+      const playing = audio.play();
+      if (playing) playing.catch(() => {});
+    }
+
+    let voiceClips = [];
+    let lastVoiceAt = -Infinity;
+    function maybeVoice() {
+      if (!voiceClips.length || state.muted) return false;
+      const now = performance.now();
+      if (now - lastVoiceAt < 8000 || Math.random() >= 0.10) return false;
+      lastVoiceAt = now;
+      voiceAudio.src = voiceClips[Math.floor(Math.random() * voiceClips.length)];
+      voiceAudio.currentTime = 0;
+      const playing = voiceAudio.play();
+      if (playing) playing.catch(() => {});
+      const note = document.createElement('span');
+      note.className = 'float';
+      note.setAttribute('aria-hidden', 'true');
+      note.textContent = '♪';
+      stage.appendChild(note);
+      setTimeout(() => note.remove(), 750);
+      return true;
+    }
+    function playTapFeedback() {
+      if (!maybeVoice()) playPatSound();
+    }
+
+    function pat(playSound = true) {
+      refresh();
+      if (playSound) playTapFeedback();
+      state.count = Math.min(Number.MAX_SAFE_INTEGER, state.count + 1);
+      state.title = cfg.titles[titleIndex(state.count)][1];
+      save();
+      renderStats();
+      renderSound();
+      stage.classList.remove('patting');
+      void stage.offsetWidth;
+      stage.classList.add('patting');
+      const heart = document.createElement('span');
+      heart.className = 'float';
+      heart.setAttribute('aria-hidden', 'true');
+      heart.textContent = '♥';
+      stage.appendChild(heart);
+      setTimeout(() => heart.remove(), 750);
+    }
+
+    // Count on pointerdown, but wait for touchend to play audio on iOS.
+    let pointerHandledTouch = false;
+    let touchStarted = false;
+    let lastPhysicalEvent = -Infinity;
+    pet.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || event.isPrimary === false) return;
+      if (event.pointerType === 'touch') pointerHandledTouch = true;
+      lastPhysicalEvent = performance.now();
+      pat(event.pointerType !== 'touch' && event.pointerType !== 'pen');
+    });
+    pet.addEventListener('pointerup', (event) => {
+      if (event.button !== 0 || event.isPrimary === false) return;
+      lastPhysicalEvent = performance.now();
+      if (event.pointerType === 'pen') playTapFeedback();
+      if (event.pointerType === 'touch' && !touchStarted) {
+        pointerHandledTouch = false;
+        playTapFeedback();
+      }
+    });
+    pet.addEventListener('pointercancel', (event) => {
+      if (event.pointerType === 'touch' && !touchStarted) pointerHandledTouch = false;
+    });
+    pet.addEventListener('touchstart', () => { touchStarted = true; }, { passive: true });
+    pet.addEventListener('touchend', (event) => {
+      if (event.cancelable) event.preventDefault();
+      lastPhysicalEvent = performance.now();
+      if (event.targetTouches.length) return;
+      touchStarted = false;
+      if (pointerHandledTouch) playTapFeedback();
+      else pat();
+      pointerHandledTouch = false;
+    }, { passive: false });
+    pet.addEventListener('touchcancel', (event) => {
+      if (!event.targetTouches.length) {
+        touchStarted = false;
+        pointerHandledTouch = false;
+      }
+    });
+    pet.addEventListener('click', (event) => {
+      const physicalClick = event.detail > 0 || event.pointerType ||
+        (event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents);
+      if (physicalClick && performance.now() - lastPhysicalEvent < 700) return;
+      pat();
+    });
+
+    sound.addEventListener('click', () => {
+      refresh();
+      state.muted = !state.muted;
+      if (state.muted) { audio.pause(); voiceAudio.pause(); }
+      save();
+      renderSound();
+    });
+
+    draw.addEventListener('click', () => {
+      refresh();
+      const day = today();
+      if (!drawnToday(day)) {
+        state.daily = { day, index: Math.floor(Math.random() * cfg.wishes.length) };
+        save();
+      }
+      renderFortune();
+    });
+
+    byId('pick-photo').addEventListener('click', () => photoInput.click());
+    byId('pick-audio').addEventListener('click', () => audioInput.click());
+
+    function setPhoto(src) {
+      photo.src = src;
+      photo.hidden = false;
+      byId('face').hidden = true;
+    }
+    function clearPhoto() {
+      photo.removeAttribute('src');
+      photo.hidden = true;
+      byId('face').hidden = false;
+    }
+
+    let photoRequest = 0;
+    photoInput.addEventListener('change', () => {
+      const file = photoInput.files[0];
+      photoInput.value = '';
+      if (!file) return;
+      const request = ++photoRequest;
+      const url = URL.createObjectURL(file);
+      const preview = new Image();
+      showStatus('');
+      preview.onload = () => {
+        URL.revokeObjectURL(url);
+        if (request !== photoRequest) return;
+        const side = Math.min(preview.naturalWidth, preview.naturalHeight);
+        const scale = Math.min(1, 512 / side);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(preview.naturalWidth * scale);
+        canvas.height = Math.round(preview.naturalHeight * scale);
+        canvas.getContext('2d').drawImage(preview, 0, 0, canvas.width, canvas.height);
+        let dataUrl = '';
+        try { dataUrl = canvas.toDataURL('image/jpeg', 0.85); } catch (_) {}
+        if (dataUrl && lsSet(cfg.photoKey, dataUrl)) {
+          setPhoto(dataUrl);
+        } else {
+          setPhoto(URL.createObjectURL(file));
+          showStatus('这张图有点大，这次能用，重开页面要重新传哦。');
+        }
+      };
+      preview.onerror = () => {
+        URL.revokeObjectURL(url);
+        if (request === photoRequest) showStatus('这张图打不开，试试 JPG、PNG 或 WebP。');
+      };
+      preview.src = url;
+    });
+
+    let hasCustomAudio = false;
+    audioInput.addEventListener('change', () => {
+      const file = audioInput.files[0];
+      audioInput.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || '');
+        if (!dataUrl) return;
+        let savedOk = false;
+        if (dataUrl.length <= 2400000) savedOk = lsSet(cfg.audioKey, dataUrl);
+        hasCustomAudio = true;
+        audio.src = dataUrl;
+        byId('audio-label').textContent = '更换音效';
+        showStatus(savedOk ? '' : '音效有点大，这次能用，重开页面要重新传哦。');
+      };
+      reader.onerror = () => showStatus('这个音效读不出来，换个文件试试。');
+      reader.readAsDataURL(file);
+    });
+
+    audio.addEventListener('error', () => {
+      if (!hasCustomAudio) return;
+      hasCustomAudio = false;
+      lsRemove(cfg.audioKey);
+      audio.src = defaultAudio;
+      byId('audio-label').textContent = '上传音效';
+      showStatus('这个音效打不开，已恢复默认音效。');
+    });
+
+    function updateVoiceUI() {
+      byId('voice-label').textContent = voiceClips.length ? `语音 ${voiceClips.length}/3` : '上传语音';
+      byId('clear-voice').hidden = !voiceClips.length;
+    }
+    function saveVoiceClips() {
+      return lsSet(cfg.voiceKey, JSON.stringify(voiceClips));
+    }
+    function loadVoiceClips() {
+      voiceClips = [];
+      try {
+        const parsed = JSON.parse(lsGet(cfg.voiceKey));
+        if (Array.isArray(parsed)) voiceClips = parsed.filter((x) => typeof x === 'string').slice(0, 3);
+      } catch (_) {}
+      updateVoiceUI();
+    }
+
+    byId('pick-voice').addEventListener('click', () => voiceInput.click());
+    voiceInput.addEventListener('change', () => {
+      const file = voiceInput.files[0];
+      voiceInput.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || '');
+        if (!dataUrl) return;
+        if (dataUrl.length > 1200000) {
+          showStatus('这段语音有点长，换十秒以内的试试。');
+          return;
+        }
+        let replaced = false;
+        if (voiceClips.length >= 3) { voiceClips.shift(); replaced = true; }
+        voiceClips.push(dataUrl);
+        const savedOk = saveVoiceClips();
+        updateVoiceUI();
+        showStatus(replaced ? '已存满 3 段，替换了最早的那段，摸头时会随机响起。'
+          : savedOk ? '存好了，摸头时会随机响起心肝的声音。'
+          : '这次能用，但没存住，重开页面要重新传哦。');
+      };
+      reader.onerror = () => showStatus('这段语音读不出来，换个文件试试。');
+      reader.readAsDataURL(file);
+    });
+    byId('clear-voice').addEventListener('click', () => {
+      voiceClips = [];
+      voiceAudio.pause();
+      lsRemove(cfg.voiceKey);
+      updateVoiceUI();
+      showStatus('语音已清空。');
+    });
+
+    function render() {
+      renderStats();
+      renderSound();
+      updateDay();
+    }
+
+    function applyEdition(ed, remember) {
+      if (!EDITIONS[ed]) ed = 'star';
+      edition = ed;
+      cfg = EDITIONS[ed];
+      if (remember) lsSet(EDITION_KEY, ed);
+      document.body.dataset.edition = ed;
+      byId('intro').textContent = cfg.intro;
+      byId('ears').hidden = ed !== 'oshi';
+      state = normalize(readState());
+      clearPhoto();
+      const savedPhoto = lsGet(cfg.photoKey);
+      if (savedPhoto) setPhoto(savedPhoto);
+      const savedAudio = lsGet(cfg.audioKey);
+      hasCustomAudio = !!savedAudio;
+      audio.src = savedAudio || defaultAudio;
+      byId('audio-label').textContent = savedAudio ? '更换音效' : '上传音效';
+      voiceAudio.pause();
+      loadVoiceClips();
+      showStatus('');
+      picker.hidden = true;
+      render();
+    }
+
+    picker.querySelectorAll('.pick').forEach((btn) => {
+      btn.addEventListener('click', () => applyEdition(btn.dataset.ed, true));
+    });
+    byId('switch').addEventListener('click', () => { picker.hidden = false; });
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === EDITION_KEY && event.newValue && EDITIONS[event.newValue] && event.newValue !== edition) {
+        applyEdition(event.newValue, false);
+      } else if (cfg && (event.key === cfg.storage || event.key === null)) {
+        state = normalize(readState());
+        render();
+      }
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && state) {
+        refresh();
+        render();
+      }
+    });
+
+    const savedEdition = lsGet(EDITION_KEY);
+    if (savedEdition && EDITIONS[savedEdition]) {
+      applyEdition(savedEdition, false);
+    } else {
+      state = normalize(null);
+      render();
+      picker.hidden = false;
+    }
+  </script>
+</body>
+</html>
