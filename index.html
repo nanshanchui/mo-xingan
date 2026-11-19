@@ -45,7 +45,7 @@
       padding-top: max(17px, env(safe-area-inset-top));
       padding-bottom: max(26px, env(safe-area-inset-bottom));
     }
-    .top { display: flex; align-items: center; justify-content: space-between; }
+    .top { display: flex; align-items: center; justify-content: flex-end; }
     .mark, .sound { display: inline-flex; align-items: center; gap: 7px; }
     .mark::after { content: ""; width: 26px; height: 1px; background: #d1a36370; }
     .mark svg { width: 17px; height: 17px; color: #dfa766; }
@@ -73,18 +73,19 @@
     }
     .intro { margin-top: 7px; color: var(--soft); font-size: 13px; letter-spacing: .08em; }
     .stage {
-      --diameter: clamp(168px, 52vw, 218px);
+      --diameter: min(86vw, 404px);
       position: relative;
       isolation: isolate;
       display: grid;
       place-items: center;
       height: calc(var(--diameter) + 54px);
       margin: 9px 0 2px;
+      z-index: 2;
     }
     .stage::before, .stage::after {
       position: absolute;
       z-index: -1;
-      width: calc(var(--diameter) + 29px);
+      width: calc(var(--diameter) + 10px);
       aspect-ratio: 1;
       border: 1px solid var(--ring-soft);
       border-radius: 50%;
@@ -92,7 +93,7 @@
       pointer-events: none;
     }
     .stage::after {
-      width: calc(var(--diameter) + 49px);
+      width: calc(var(--diameter) + 22px);
       border-color: var(--ring-faint);
       border-style: dashed;
     }
@@ -136,19 +137,18 @@
       pointer-events: none;
       filter: drop-shadow(0 4px 5px #28150d60);
     }
-    .stage.patting .hand { animation: pat .54s ease-in-out both; }
-    .stage.patting .pet { animation: squash .54s both; }
+    .stage.patting .hand { animation: pat .88s cubic-bezier(.42, 0, .22, 1) both; }
+    .stage.patting .pet { animation: squash .88s cubic-bezier(.42, 0, .28, 1) both; }
     @keyframes pat {
-      0% { opacity: 0; transform: translate(-18%, -45px) rotate(15deg); }
-      17% { opacity: 1; }
-      43%, 53% { opacity: 1; transform: translate(-29%, 1px) rotate(-5deg); }
-      80% { opacity: .8; }
-      100% { opacity: 0; transform: translate(-17%, -42px) rotate(13deg); }
+      0% { opacity: 0; transform: translate(-22%, -24px) rotate(9deg); }
+      17% { opacity: .94; }
+      42%, 64% { opacity: 1; transform: translate(-29%, 1px) rotate(-4deg); }
+      100% { opacity: 0; transform: translate(-21%, -25px) rotate(9deg); }
     }
     @keyframes squash {
-      0%, 25%, 100% { transform: scale(1); }
-      45%, 52% { transform: translateY(5px) scale(1.046, .92); }
-      72% { transform: translateY(-2px) scale(.985, 1.035); }
+      0%, 32%, 100% { transform: scale(1); }
+      50%, 61% { transform: scale(1.018, .956); }
+      83% { transform: scale(.997, 1.008); }
     }
     .float {
       position: absolute;
@@ -565,6 +565,228 @@
     .editor-sliders { display: flex; flex-wrap: wrap; gap: 7px 12px; margin-bottom: 8px; }
     .editor-sliders label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; }
     .editor-sliders input[type="range"] { width: 79px; accent-color: var(--ring); }
+    .settings-button { display: grid; width: 40px; height: 40px; padding: 0; place-items: center; }
+    .settings-button svg { width: 21px; height: 21px; }
+    .settings-backdrop { position: fixed; z-index: 10; inset: 0; width: 100%; border: 0; background: #120b15b8; }
+    #settings {
+      position: fixed;
+      z-index: 11;
+      top: max(10px, env(safe-area-inset-top));
+      right: max(12px, calc((100% - 450px) / 2 + 12px));
+      width: min(calc(100% - 24px), 426px);
+      max-height: calc(100vh - 28px);
+      max-height: calc(100dvh - 28px);
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      overscroll-behavior: contain;
+      background: var(--bg-mid);
+    }
+    body.settings-open { overflow: hidden; }
+    body.settings-open #status { display: none; }
+    .settings-heading { display: flex; align-items: center; justify-content: space-between; }
+    #settings .settings-heading h2 { margin: 0; font-size: 19px; }
+    #settings .settings-heading button { min-height: 36px; }
+    .settings-group { margin-top: 13px; }
+    .settings-group h3 { margin: 0 0 6px; font-size: 14px; }
+    .settings-uploads .actions, .settings-uploads .voice-actions { justify-content: flex-start; flex-wrap: wrap; }
+    .sound-setting { margin-top: 8px; }
+    #settings .event-heading { margin-top: 14px; }
+    .segments { display: inline-flex; padding: 3px; gap: 3px; border: 1px solid var(--line); border-radius: 11px; background: var(--bg-low); }
+    .segments button { min-width: 69px; min-height: 36px; border: 1px solid transparent; border-radius: 8px; color: var(--gold); background: transparent; }
+    .segments button[aria-pressed="true"], #editor-erase[aria-pressed="true"] { border-color: var(--ring); color: var(--ink); background: var(--button-top); font-weight: 700; }
+    .editor-tools { margin-top: 8px; }
+    .editor-mode-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 7px; }
+    #editor-zoom-control input { width: min(180px, 52vw); }
+    #game > .stats, #game > .countdown { position: relative; z-index: 2; }
+    #game > .stats { margin-top: 7px; }
+    #game > .countdown { grid-template-columns: 36px minmax(0, 1fr); padding: 10px 12px; }
+    #game > .countdown .countdown-icon { width: 36px; height: 36px; }
+    #game > .countdown .countdown-value { font-size: clamp(26px, 8vw, 38px); }
+    #game > .countdown .countdown-content { gap: 3px; }
+    .combo { z-index: 6; top: auto; bottom: 6px; }
+    .stage[data-interaction="pinch"] .hand, .cheek-glow {
+      position: absolute;
+      left: calc(50% + var(--diameter) * .39);
+      top: calc(27px + var(--diameter) * .56);
+      pointer-events: none;
+      opacity: 0;
+    }
+    .stage[data-cutout][data-interaction="pinch"] .hand, .stage[data-cutout] .cheek-glow {
+      left: calc(50% + var(--head-shift, 0px) + var(--diameter) * .135);
+      top: calc(27px + var(--head-offset, 0px) + (var(--diameter) - var(--head-offset, 0px)) * .19);
+    }
+    .stage[data-interaction="pinch"] .hand {
+      z-index: 3;
+      width: clamp(48px, 14.5vw, 72px);
+      transform-origin: 10% 76%;
+    }
+    .cheek-glow { z-index: 1; width: 48px; height: 46px; margin-left: -9px; border-radius: 50%; background: radial-gradient(ellipse, #f9537f85, #ff9aa945 42%, transparent 70%); }
+    .stage[data-interaction="pinch"].patting .pet { animation: pinch-squash 1s ease-in-out both; }
+    .stage[data-interaction="pinch"].patting .hand { animation: pinch-cheek 1s ease-in-out both; }
+    .stage[data-interaction="pinch"].patting .cheek-glow { animation: cheek-glow 1s ease-in-out both; }
+    @keyframes pinch-squash {
+      0%, 26%, 100% { transform: scale(1); }
+      38%, 51%, 70% { transform: scale(.94, 1.03); }
+      45% { transform: translate(-2px, -1px) scale(.94, 1.03); }
+      62% { transform: translate(2px, 1px) scale(.94, 1.03); }
+      88% { transform: scale(1.008, .997); }
+    }
+    @keyframes pinch-cheek {
+      0%, 100% { opacity: 0; transform: translate(6px, -72%) rotate(-12deg); }
+      21% { opacity: .86; }
+      38%, 51%, 70% { opacity: 1; transform: translate(-7px, -72%) rotate(-15deg); }
+      45% { transform: translate(-9px, calc(-72% - 1px)) rotate(-19deg); }
+      62% { transform: translate(-5px, calc(-72% + 1px)) rotate(-11deg); }
+    }
+    @keyframes cheek-glow { 0%, 29%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(.8); } 40%, 72% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+    .float.soft-heart { left: 25%; top: 40%; color: #ff9eaf; font-size: 17px; animation-delay: .07s; animation-duration: .66s; }
+    .reaction, .combo-line { position: absolute; z-index: 5; top: 7px; right: 3%; pointer-events: none; }
+    .reaction { font-size: clamp(36px, 10vw, 52px); line-height: 1; animation: reaction-pop 1.12s ease-out both; }
+    @keyframes reaction-pop { 0% { opacity: 0; transform: scale(.35) rotate(-11deg); } 18% { opacity: 1; transform: scale(1.11) rotate(4deg); } 27%, 82% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.04); } }
+    .combo-line { top: 49px; max-width: 53%; padding: 7px 10px; border-radius: 14px; background: #fff2dd; color: #553046; font-size: 13px; font-weight: 650; text-align: left; animation: reaction-pop 2s both; }
+    .combo-line strong { color: #a23a60; margin-right: 2px; }
+    .reaction-rain { position: fixed; z-index: 1; inset: 0; overflow: hidden; pointer-events: none; }
+    .reaction-rain span { position: absolute; left: var(--x); top: -36px; color: #ffafc6; font-size: var(--size); animation: rain-drop 1.65s linear var(--delay) both; }
+    .reaction-rain span:nth-child(even) { color: #ffdf94; }
+    @keyframes rain-drop { 0% { opacity: 0; transform: translateY(0) rotate(0); } 15%, 80% { opacity: .95; } 100% { opacity: 0; transform: translate(var(--drift), 108vh) rotate(140deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .stage[data-interaction="pinch"].patting .pet { animation: none; }
+      .stage[data-interaction="pinch"].patting .hand { animation: touch-still .55s both; transform: translate(-7px, -72%) rotate(-15deg); }
+      .reaction-rain { display: none; }
+    }
+    :root {
+      color-scheme: light dark;
+      --ui-start: #fff8ee;
+      --ui-end: #f9e4d8;
+      --ui-glow: #ffe0bda6;
+      --ui-halo: #ffc68165;
+      --ui-card: #fff8f1e8;
+      --ui-panel: #fff6ee;
+      --ui-raised: #f8e7db;
+      --ui-input: #fffcf7;
+      --ui-text: #51362f;
+      --ui-muted: #745144;
+      --ui-title: #763d22;
+      --ui-line: #935c4540;
+      --ui-shadow: #8f543621;
+      --ui-error: #983d43;
+      --ui-scrim: #593c346e;
+    }
+    body[data-skin="oshi"] {
+      --ui-end: #f6e2ea;
+      --ui-glow: #ffdcdab0;
+      --ui-halo: #edb5c66b;
+      --ui-card: #fff7f8eb;
+      --ui-panel: #fff3f4;
+      --ui-raised: #f6e5eb;
+      --ui-title: #773c59;
+    }
+    body, body[data-skin], body[data-skin][data-palette] {
+      color-scheme: light;
+      color: var(--ui-text);
+      background: radial-gradient(ellipse at 50% 24%, var(--ui-glow), transparent 60%),
+        linear-gradient(155deg, var(--ui-start), var(--ui-end)) fixed;
+    }
+    body .card, body[data-skin][data-palette] .card {
+      border-color: var(--ui-line);
+      border-radius: 19px;
+      background: var(--ui-card);
+      box-shadow: 0 8px 24px var(--ui-shadow);
+    }
+    body #settings, body .photo-dialog > .card { background: var(--ui-panel); }
+    body .settings-backdrop, body .photo-dialog { background: var(--ui-scrim); }
+    body h1, body .count, body .wish, body[data-skin] h1, body[data-skin] .count,
+    body[data-skin] .wish, body[data-skin][data-palette] h1, body[data-skin][data-palette] .count,
+    body[data-skin][data-palette] .wish { color: var(--ui-title); }
+    body .caption, body .intro, body .oshi-tip { color: var(--ui-muted); }
+    body .status { color: var(--ui-error); }
+    body .sound, body .action:not(.primary), body .title, body .fortune h2 svg,
+    body[data-skin] .sound, body[data-skin] .action:not(.primary), body[data-skin] .title, body[data-skin] .fortune h2 svg,
+    body[data-skin][data-palette] .sound, body[data-skin][data-palette] .action:not(.primary),
+    body[data-skin][data-palette] .title, body[data-skin][data-palette] .fortune h2 svg,
+    body .segments, body .combo, body .toast, body .badge[data-unlocked] {
+      color: var(--ui-title);
+      background: var(--ui-raised);
+      border-color: var(--ui-line);
+    }
+    body .segments button { color: var(--ui-text); }
+    body .segments button[aria-pressed="true"], body #editor-erase[aria-pressed="true"] {
+      color: var(--ink);
+      border-color: var(--ring);
+      background: var(--button-top);
+    }
+    body .quote-editor textarea, body .event-fields input {
+      color: var(--ui-text);
+      border-color: var(--ui-line);
+      background: var(--ui-input);
+    }
+    body .quote-editor textarea::placeholder { color: var(--ui-muted); }
+    body .palette-options label, body .badge time, body .badge { color: var(--ui-muted); }
+    body .swatch[aria-pressed="true"], body .color-option[data-selected] .color-rainbow,
+    body .color-option:focus-within .color-rainbow, body button:focus-visible,
+    body .quote-editor textarea:focus { outline-color: var(--ui-title); }
+    #game > .countdown, #game > .countdown[data-state="past"], #game > .countdown[data-state="today"] {
+      color: var(--ui-title);
+      border-color: var(--ui-line);
+      background: linear-gradient(130deg, var(--ui-card), var(--ui-raised));
+      box-shadow: 0 7px 19px var(--ui-shadow);
+    }
+    #game > .countdown .countdown-value, #game > .countdown .countdown-icon, #game > .countdown .countdown-soon {
+      color: var(--ui-title);
+    }
+    #game > .countdown .countdown-icon { border-color: var(--ui-line); background: var(--ui-card); }
+    #game > .countdown .countdown-hearts { color: var(--ui-title); opacity: .23; }
+    #game > .countdown::before { opacity: .23; }
+    #game > .countdown[data-state="past"]::before { opacity: .12; }
+    #game > .countdown[data-state="today"]::before { opacity: .4; }
+    .stage::after { box-shadow: 0 0 48px 13px var(--ui-halo); }
+    .daily-fortune { position: relative; z-index: 2; }
+    .daily-fortune .wish-title { color: var(--ui-title); font-size: 13px; text-align: right; }
+    .daily-fortune .wish { margin: 5px 1px 0; padding: 0; border: 0; font-size: 14px; line-height: 1.55; }
+    @supports (color: color-mix(in srgb, black, white)) {
+      body[data-skin][data-palette] {
+        --ui-glow: color-mix(in srgb, var(--accent) 23%, #ffeade);
+        --ui-halo: color-mix(in srgb, var(--accent) 32%, #ffe0c330);
+        --ui-raised: color-mix(in srgb, var(--accent) 15%, #fff3ea);
+      }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ui-start: #372723;
+        --ui-end: #251917;
+        --ui-glow: #81523764;
+        --ui-halo: #ea9c5360;
+        --ui-card: #392823f5;
+        --ui-panel: #392622;
+        --ui-raised: #4d342d;
+        --ui-input: #2b1c1a;
+        --ui-text: #f9e6d8;
+        --ui-muted: #e1c6b5;
+        --ui-title: #ffe1ba;
+        --ui-line: #ffcea050;
+        --ui-shadow: #160b0a73;
+        --ui-error: #ffc0b6;
+        --ui-scrim: #190e10ae;
+      }
+      body[data-skin="oshi"] {
+        --ui-end: #2c1a2a;
+        --ui-glow: #79486769;
+        --ui-halo: #ef9cbd56;
+        --ui-card: #442d3bf5;
+        --ui-panel: #402b37;
+        --ui-raised: #57384b;
+        --ui-title: #ffd9e6;
+      }
+      body, body[data-skin], body[data-skin][data-palette] { color-scheme: dark; }
+      @supports (color: color-mix(in srgb, black, white)) {
+        body[data-skin][data-palette] {
+          --ui-glow: color-mix(in srgb, var(--accent) 25%, #4d2d3170);
+          --ui-halo: color-mix(in srgb, var(--accent) 30%, #a46a4648);
+          --ui-raised: color-mix(in srgb, var(--accent) 17%, #39292b);
+        }
+      }
+    }
     @media (prefers-reduced-motion: reduce) {
       .stage.patting .pet { animation: none; }
       .stage.patting .hand { animation: touch-still .42s both; }
@@ -591,24 +813,20 @@
     </button>
   </main>
   <main class="page" id="game" hidden>
-    <div class="top">
-      <span class="mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21 3.8 13a5.3 5.3 0 0 1 7.5-7.5l.7.7.7-.7a5.3 5.3 0 0 1 7.5 7.5Z"/></svg>
-      </span>
+    <div class="top" data-settings-background>
       <div class="top-actions">
-        <button class="sound" id="sound" type="button" aria-label="游戏声音" aria-pressed="true">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 9v6h4l5 4V5L8 9H4Z"/><path class="waves" d="M16 9a4 4 0 0 1 0 6m2-8a7 7 0 0 1 0 10"/><path class="slash" d="m16 10 5 5m0-5-5 5"/>
-          </svg>
-          <span id="sound-label">声音开</span>
-        </button>
         <button class="sound" id="switch-version" type="button">切换版本</button>
+        <button class="sound settings-button" id="settings-toggle" type="button" aria-label="设置" title="设置" aria-controls="settings" aria-expanded="false">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m10 3-.6 2.5-1.6.9-2.5-.7-2 3.4 1.9 1.8v1.9l-1.9 1.8 2 3.4 2.5-.7 1.6.9.6 2.5h4l.6-2.5 1.6-.9 2.5.7 2-3.4-1.9-1.8v-1.9l1.9-1.8-2-3.4-2.5.7-1.6-.9L14 3z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
       </div>
     </div>
 
-    <section class="hero" aria-labelledby="game-title">
+    <section class="hero" aria-labelledby="game-title" data-settings-background>
       <h1 id="game-title" tabindex="-1">摸一摸你的心肝</h1>
-      <p class="intro" id="game-intro">轻点本命的脸，摸摸头</p>
       <div class="stage" id="stage">
         <svg class="sparkles" aria-hidden="true" viewBox="0 0 400 270" preserveAspectRatio="none" fill="#eeb776">
           <path d="M57 83q0 9 9 9-9 0-9 9 0-9-9-9 9 0 9-9Z" opacity=".75"/>
@@ -645,36 +863,16 @@
           <path d="m28 52 25-7m-18 22 28-9m3 15 10-8m-6-33c-7 4-12 8-14 13" stroke="#a65f46" stroke-width="2.5" stroke-linecap="round"/>
           <path d="m99 19 23-12c8 3 14 17 13 25-1 4-5 6-10 9-3-13-12-21-26-22Z" fill="#d88768" stroke="#79442f" stroke-width="3.2" stroke-linejoin="round"/>
         </svg>
+        <span class="cheek-glow" aria-hidden="true"></span>
         <div class="quote-bubble" id="quote-bubble" role="status" aria-atomic="true" hidden></div>
         <span class="combo" id="combo" hidden></span>
       </div>
-      <div class="actions">
-        <button class="action primary" id="pick-photo" type="button">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9" r="1.3"/><path d="m5 17 5-4 3 2 4-5 4 5"/>
-          </svg>
-          上传图片
-        </button>
-        <button class="action" id="pick-audio" type="button">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 17V6l11-2v11M9 9l11-2"/><ellipse cx="6" cy="17" rx="3" ry="2.5"/><ellipse cx="17" cy="15" rx="3" ry="2.5"/>
-          </svg>
-          <span id="audio-label">上传音效</span>
-        </button>
-        <input id="photo-input" type="file" accept="image/*" hidden>
-        <input id="audio-input" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" hidden>
-      </div>
-      <div class="voice-actions">
-        <span class="caption" id="voice-count">语音 0/3</span>
-        <button class="action" id="reedit-photo" type="button" hidden>重新抠图</button>
-        <button class="action" id="pick-voice" type="button" title="每段最多 10 秒，支持 MP3、M4A">上传语音</button>
-        <button class="action" id="clear-voice" type="button" disabled>清空语音</button>
-        <input id="voice-input" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" multiple hidden>
-      </div>
+
+
       <p class="status" id="status" role="status" hidden></p>
     </section>
 
-    <section class="card stats" aria-label="摸头次数和称号">
+    <section class="card stats" aria-label="摸头次数和称号" data-settings-background>
       <div class="stats-top">
         <div>
           <div class="tally"><strong class="count" id="count">0</strong><span class="caption">摸头次数</span></div>
@@ -685,7 +883,7 @@
       <progress id="progress" value="0" max="100" aria-label="到下一称号的进度"></progress>
       <p class="caption" id="next-title">再摸 100 次升为「颜粉」</p>
     </section>
-    <button class="countdown" id="countdown" type="button" aria-controls="settings" aria-expanded="false" hidden>
+    <button class="countdown" id="countdown" type="button" aria-controls="settings" aria-expanded="false" data-settings-background hidden>
       <span class="countdown-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3.5" y="5.5" width="17" height="15" rx="2.8"/>
@@ -705,17 +903,85 @@
         <path d="M15 20c-4-5-12-1-9 5 1 4 6 6 11 8 5-5 7-9 6-12-1-6-8-5-8-1ZM60 53c-4-4-10 0-8 4 1 4 7 6 10 7 3-4 5-7 4-10-1-4-6-4-6-1Z" opacity=".72"/>
       </svg>
     </button>
-    <div class="extra-row">
-      <button class="action" id="make-poster" type="button">生成海报</button>
-      <button class="action" id="settings-toggle" type="button" aria-controls="settings" aria-expanded="false">设置</button>
-      <button class="action" id="achievements-toggle" type="button" aria-controls="achievements" aria-expanded="false">成就</button>
-    </div>
-    <section class="card extra-panel" id="poster-panel" aria-label="海报预览" hidden>
-      <img class="poster-img" id="poster-image" alt="摸头统计海报">
-      <div class="tool-row"><a class="action primary" id="poster-download" download>下载海报</a><button class="action" id="poster-close" type="button">关闭</button></div>
+    <section class="card fortune daily-fortune" aria-labelledby="fortune-title" data-settings-background>
+      <div class="fortune-top">
+        <h2 id="fortune-title">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m8 19 4-14a2 2 0 0 1 2.5-1.4l3 .9a2 2 0 0 1 1.4 2.5l-4 14a1 1 0 0 1-1.2.7l-5-1.5a1 1 0 0 1-.7-1.2Z"/>
+            <path d="m12 17 3-9M5 5v4M3 7h4"/>
+          </svg>
+          每日一签
+        </h2>
+        <strong class="wish-title" id="wish-title"></strong>
+      </div>
+      <p class="wish" id="wish"></p>
     </section>
-    <section class="card extra-panel" id="settings" aria-labelledby="settings-title" hidden>
-      <h2 id="settings-title" tabindex="-1">重要日子</h2>
+    <button class="settings-backdrop" id="settings-backdrop" type="button" tabindex="-1" aria-label="关闭设置" hidden></button>
+    <section class="card extra-panel" id="settings" role="dialog" aria-modal="true" aria-labelledby="settings-heading" hidden>
+      <div class="settings-heading">
+        <h2 id="settings-heading" tabindex="-1">设置</h2>
+        <button class="action" id="settings-close" type="button">关闭</button>
+      </div>
+      <div class="settings-group">
+        <h3>互动方式</h3>
+        <div class="segments" role="group" aria-label="互动方式">
+          <button id="action-pat" type="button" aria-pressed="true">摸头</button>
+          <button id="action-pinch" type="button" aria-pressed="false">捏脸</button>
+        </div>
+        <p class="intro" id="game-intro">轻点本命的脸，摸摸头</p>
+      </div>
+      <div class="settings-group">
+        <h3>心肝与声音</h3>
+        <div class="settings-uploads">
+          <div class="actions">
+            <button class="action primary" id="pick-photo" type="button">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9" r="1.3"/><path d="m5 17 5-4 3 2 4-5 4 5"/>
+              </svg>
+              换心肝
+            </button>
+            <button class="action" id="pick-audio" type="button">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 17V6l11-2v11M9 9l11-2"/><ellipse cx="6" cy="17" rx="3" ry="2.5"/><ellipse cx="17" cy="15" rx="3" ry="2.5"/>
+              </svg>
+              <span id="audio-label">上传音效</span>
+            </button>
+            <input id="photo-input" type="file" accept="image/*" hidden>
+            <input id="audio-input" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" hidden>
+          </div>
+          <div class="voice-actions">
+            <span class="caption" id="voice-count">语音 0/3</span>
+            <button class="action" id="reedit-photo" type="button" hidden>重新抠图</button>
+            <button class="action" id="pick-voice" type="button" title="每段最多 10 秒，支持 MP3、M4A">上传语音</button>
+            <button class="action" id="clear-voice" type="button" disabled>清空语音</button>
+            <input id="voice-input" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" multiple hidden>
+          </div>
+        </div>
+        <div class="settings-group sound-setting"><button class="sound" id="sound" type="button" aria-label="游戏声音" aria-pressed="true">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9v6h4l5 4V5L8 9H4Z"/><path class="waves" d="M16 9a4 4 0 0 1 0 6m2-8a7 7 0 0 1 0 10"/><path class="slash" d="m16 10 5 5m0-5-5 5"/>
+          </svg>
+          <span id="sound-label">声音开</span>
+        </button></div>
+      </div>
+      <p class="status" id="controls-status" role="status" hidden></p>
+      <section class="card fortune" aria-labelledby="quote-heading">
+        <div class="fortune-top">
+          <h2 id="quote-heading">自担语录</h2>
+          <button class="action draw" id="quote-toggle" type="button" aria-expanded="false" aria-controls="quote-editor">管理语录</button>
+        </div>
+        <div class="quote-editor" id="quote-editor" hidden>
+          <label for="quote-text">一行一条，每条最多 40 字</label>
+          <textarea id="quote-text" rows="4" aria-describedby="quote-count" placeholder="粘贴或输入语录"></textarea>
+          <div class="quote-actions">
+            <button class="action primary" id="quote-save" type="button">保存</button>
+            <button class="action" id="quote-clear" type="button" disabled>清空语录</button>
+            <span class="caption" id="quote-count">已存 0/50 条 · 使用默认语录</span>
+          </div>
+          <p class="status" id="quote-status" role="status" hidden></p>
+        </div>
+      </section>
+      <h2 class="event-heading" id="settings-title" tabindex="-1">重要日子</h2>
       <form id="event-form">
         <div class="event-fields">
           <label for="event-name">名称<input id="event-name" type="text" maxlength="40" required></label>
@@ -736,39 +1002,21 @@
         </div>
       </div>
       <p class="status" id="settings-status" role="status" hidden></p>
-    </section>
-    <section class="card extra-panel" id="achievements" aria-labelledby="achievements-title" hidden>
-      <h2 id="achievements-title">成就</h2><div class="badges" id="badges"></div>
-    </section>
 
-    <section class="card fortune" aria-labelledby="fortune-title">
-      <div class="fortune-top">
-        <h2 id="fortune-title">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m8 19 4-14a2 2 0 0 1 2.5-1.4l3 .9a2 2 0 0 1 1.4 2.5l-4 14a1 1 0 0 1-1.2.7l-5-1.5a1 1 0 0 1-.7-1.2Z"/>
-            <path d="m12 17 3-9M5 5v4M3 7h4"/>
-          </svg>
-          每日一签
-        </h2>
-        <div class="fortune-actions">
-          <button class="action draw" id="quote-toggle" type="button" aria-expanded="false" aria-controls="quote-editor">语录</button>
-          <button class="action draw" id="draw" type="button">抽一签</button>
-        </div>
+      <div class="extra-row">
+        <button class="action" id="make-poster" type="button">生成海报</button>
+        <button class="action" id="achievements-toggle" type="button" aria-controls="achievements" aria-expanded="false">成就墙</button>
       </div>
-      <p class="wish" id="wish" role="status" hidden></p>
-      <div class="quote-editor" id="quote-editor" hidden>
-        <label for="quote-text">一行一条，每条最多 40 字</label>
-        <textarea id="quote-text" rows="4" aria-describedby="quote-count" placeholder="粘贴或输入语录"></textarea>
-        <div class="quote-actions">
-          <button class="action primary" id="quote-save" type="button">保存</button>
-          <button class="action" id="quote-clear" type="button" disabled>清空语录</button>
-          <span class="caption" id="quote-count">已存 0/50 条 · 使用默认语录</span>
-        </div>
-        <p class="status" id="quote-status" role="status" hidden></p>
-      </div>
+      <section class="card extra-panel" id="poster-panel" aria-label="海报预览" hidden>
+        <img class="poster-img" id="poster-image" alt="摸头统计海报">
+        <div class="tool-row"><a class="action primary" id="poster-download" download>下载海报</a><button class="action" id="poster-close" type="button">关闭</button></div>
+      </section>
+      <section class="card extra-panel" id="achievements" aria-labelledby="achievements-title" hidden>
+        <h2 id="achievements-title">成就</h2><div class="badges" id="badges"></div>
+      </section>
     </section>
   </main>
-  <audio id="pat-audio" preload="auto" src="pat.m4a"></audio>
+  <audio id="pat-audio" preload="auto" src="data:audio/mp4;base64,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"></audio>
 
   <div class="toast" id="achievement-toast" role="status" hidden></div>
   <div class="photo-dialog" id="photo-dialog" role="dialog" aria-modal="true" aria-labelledby="photo-heading" hidden>
@@ -780,7 +1028,16 @@
         <button class="action" id="photo-cancel" type="button">取消</button>
       </div>
       <div id="cutout-editor" hidden>
-        <p class="caption">涂抹要擦除的背景。放大后可切换为拖动查看。</p>
+        <div class="editor-mode-row">
+          <div class="segments" role="group" aria-label="图片查看方式">
+            <button id="editor-pan" type="button" aria-pressed="true">拖动</button>
+            <button id="editor-scale" type="button" aria-pressed="false">缩放</button>
+          </div>
+          <button class="action" id="editor-erase" type="button" aria-pressed="false">橡皮擦</button>
+        </div>
+        <div class="editor-sliders" id="editor-zoom-control" hidden>
+          <label>缩放 <input id="editor-zoom" type="range" min="1" max="4" step="any" value="1"></label>
+        </div>
         <div class="tool-row">
           <button class="action primary" id="editor-auto" type="button" disabled>
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -795,8 +1052,6 @@
         <canvas class="editor-canvas" id="editor-canvas" width="440" height="350" aria-label="照片抠图画布"></canvas>
         <div class="editor-sliders">
           <label>笔刷 <input id="brush-size" type="range" min="4" max="90" value="24"></label>
-          <label>缩放 <input id="editor-zoom" type="range" min="1" max="4" step=".1" value="1"></label>
-          <label><input id="editor-pan" type="checkbox"> 拖动查看</label>
         </div>
         <div class="tool-row">
           <button class="action primary" id="editor-done" type="button">完成</button>
@@ -810,6 +1065,9 @@
   </div>
   <audio id="pat-audio-2" preload="auto"></audio>
   <audio id="pat-audio-3" preload="auto"></audio>
+  <audio id="pinch-audio" preload="auto" src="data:audio/mp4;base64,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"></audio>
+  <audio id="pinch-audio-2" preload="auto"></audio>
+  <audio id="pinch-audio-3" preload="auto"></audio>
   <audio id="voice-audio" preload="auto"></audio>
   <audio id="voice-audio-2" preload="auto"></audio>
 
@@ -820,7 +1078,6 @@
     const audio = byId('pat-audio');
     const defaultAudio = audio.getAttribute('src');
     const sound = byId('sound');
-    const draw = byId('draw');
     const wish = byId('wish');
     const photo = byId('photo');
     const photoInput = byId('photo-input');
@@ -830,6 +1087,10 @@
     const voiceInput = byId('voice-input');
     const voiceAudio = byId('voice-audio');
     const effectPool = [audio, byId('pat-audio-2'), byId('pat-audio-3')];
+    const pinchAudio = byId('pinch-audio');
+    const pinchDefault = pinchAudio.getAttribute('src');
+    const pinchPool = [pinchAudio, byId('pinch-audio-2'), byId('pinch-audio-3')];
+    let pinchIndex = 0;
     const voicePool = [voiceAudio, byId('voice-audio-2')];
     let effectIndex = 0;
     let voiceIndex = 0;
@@ -841,6 +1102,8 @@
         key: 'xingan-pat-star-v2',
         intro: '轻点本命的脸，摸摸头',
         defaultQuotes: ['今天也辛苦啦。', '要好好吃饭，知道吗。', '谢谢你来看我。'],
+        comboQuotes: ['后排的灯牌也看到了，给你比个心！', '这次安可偷偷留给你。', '你的应援，我一直记着呢。'],
+        wishTitles: ['闪闪发光', '直播惊喜', '饭撒预告', '等你翻牌', '今日存图', '奔赴见面', '告白好运', '演唱会好运', '更近一步', '直拍快乐', '应援有回应', '今日欧气'],
         titles: ['新入坑', '颜粉', '妈妈粉', '女友粉', '一体机', '梦女', '绯闻女友', '老婆'],
         wishes: [
           '你担今天也在为你闪闪发光。',
@@ -861,6 +1124,8 @@
         key: 'xingan-pat-oshi-v2',
         intro: '轻点你推的脸，摸摸头',
         defaultQuotes: ['别哭，我在。', '今天也来啦。', '嗯……就摸一下。'],
+        comboQuotes: ['隐藏好感度解锁，奖励你一个贴贴。', '喂，屏幕那边的你，手速也太快了！', '连击判定全是 Perfect？那我也要反击了！'],
+        wishTitles: ['抽卡好运', '次元来信', '买谷快乐', '产粮灵感', '次元许愿', '新物料在路上', '官宣有喜', '单推好运', '给娃添新衣', '隔屏告白', '快乐充能', '刚好喜欢你'],
         titles: ['新入坑', '有点上头', '单推人', '本命推', '亲妈本妈', '死忠守护', '纸片人本命', '次元壁粉碎者'],
         wishes: [
           '今日宜抽卡，欧气守恒，下一发必金。',
@@ -951,12 +1216,22 @@
       return !!daily && daily.day === day && Number.isInteger(daily.index) && !!version.wishes[daily.index];
     }
 
+    function dailyFortune(day) {
+      if (!drawnToday(day)) {
+        const size = version.wishes.length;
+        const offset = mode === 'oshi' ? 7 : 0;
+        let index = ((calendarDay(day) * 5 + offset) % size + size) % size;
+        if (state.daily && state.daily.index === index) index = (index + 1) % size;
+        state.daily = { day, index };
+        save();
+      }
+      return state.daily.index;
+    }
+
     function renderFortune() {
-      const drawn = drawnToday(today());
-      draw.disabled = drawn;
-      draw.textContent = drawn ? '今日已抽' : '抽一签';
-      wish.textContent = drawn ? version.wishes[state.daily.index] : '';
-      wish.hidden = !drawn;
+      const index = dailyFortune(today());
+      byId('wish-title').textContent = version.wishTitles[index];
+      wish.textContent = version.wishes[index];
     }
 
     let midnightTimer;
@@ -972,13 +1247,22 @@
     }
 
     function showStatus(message) {
-      const status = byId('status');
-      status.textContent = message;
-      status.hidden = !message;
+      for (const id of ['status', 'controls-status']) {
+        const status = byId(id);
+        status.textContent = message;
+        status.hidden = !message;
+      }
     }
 
     function playPatSound(onRejected = () => {}) {
       if (state.muted) return;
+      if (stage.dataset.interaction === 'pinch') {
+        const pinchPlayer = pinchPool[pinchIndex];
+        pinchIndex = (pinchIndex + 1) % pinchPool.length;
+        const pinchPlaying = playFromStart(pinchPlayer);
+        if (pinchPlaying) pinchPlaying.catch(onRejected);
+        return;
+      }
       const player = effectPool[effectIndex];
       effectIndex = (effectIndex + 1) % effectPool.length;
       const playing = playFromStart(player);
@@ -1034,7 +1318,9 @@
       void stage.offsetWidth;
       stage.classList.add('patting');
       floatFeedback('♥');
+      floatFeedback('♥', 'float soft-heart');
       maybeShowQuote();
+      maybeShowReaction();
     }
 
     function floatFeedback(symbol, cssClass = 'float') {
@@ -1044,6 +1330,55 @@
       heart.textContent = symbol;
       stage.appendChild(heart);
       setTimeout(() => heart.remove(), 750);
+    }
+
+    const reactionStickers = ['😊', '🥰', '😳', '🤤', '😴', '✨'];
+    function randomEntry(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function showReaction(element, parent, duration) {
+      element.setAttribute('aria-hidden', 'true');
+      parent.appendChild(element);
+      setTimeout(() => element.remove(), duration);
+    }
+
+    function maybeShowReaction() {
+      if (Math.random() >= .25) return;
+      stage.querySelectorAll('.reaction').forEach((item) => item.remove());
+      const sticker = document.createElement('span');
+      sticker.className = 'reaction';
+      sticker.textContent = randomEntry(reactionStickers);
+      showReaction(sticker, stage, 1130);
+    }
+
+    function showComboLine() {
+      stage.querySelectorAll('.combo-line').forEach((item) => item.remove());
+      const bubble = document.createElement('span');
+      bubble.className = 'combo-line';
+      const mark = document.createElement('strong');
+      mark.textContent = '！';
+      const line = document.createElement('span');
+      line.textContent = randomEntry(version.comboQuotes);
+      bubble.appendChild(mark);
+      bubble.appendChild(line);
+      showReaction(bubble, stage, 2020);
+    }
+
+    function showReactionRain() {
+      game.querySelectorAll('.reaction-rain').forEach((item) => item.remove());
+      const rain = document.createElement('div');
+      rain.className = 'reaction-rain';
+      for (let index = 0; index < 32; index++) {
+        const piece = document.createElement('span');
+        piece.textContent = index % 2 ? '✦' : '♥';
+        piece.style.setProperty('--x', `${(index + Math.random()) * 3.05}%`);
+        piece.style.setProperty('--delay', `${Math.random() * .6}s`);
+        piece.style.setProperty('--size', `${14 + Math.random() * 16}px`);
+        piece.style.setProperty('--drift', `${(Math.random() - .5) * 56}px`);
+        rain.appendChild(piece);
+      }
+      showReaction(rain, game, 2300);
     }
 
     function startPointerEffect() {
@@ -1125,20 +1460,11 @@
       state.muted = !state.muted;
       if (state.muted) {
         pausePlayers(effectPool);
+        pausePlayers(pinchPool);
         pausePlayers(voicePool);
       }
       save();
       renderSound();
-    });
-
-    draw.addEventListener('click', () => {
-      refresh();
-      const day = today();
-      if (!drawnToday(day)) {
-        state.daily = { day, index: Math.floor(Math.random() * version.wishes.length) };
-        save();
-      }
-      renderFortune();
     });
 
     byId('pick-photo').addEventListener('click', () => photoInput.click());
@@ -1170,6 +1496,7 @@
       stage.style.setProperty('--head-offset', `calc(var(--diameter) * ${1 - media.cutRatio})`);
       stage.style.setProperty('--head-shift', `calc(var(--diameter) * ${media.headShift})`);
       preloadEffects(media.effect || defaultAudio);
+      preloadPinch();
       byId('audio-label').textContent = media.effect ? '更换音效' : '上传音效';
       byId('voice-count').textContent = `语音 ${media.voices.length}/${maxVoices}`;
       byId('pick-voice').disabled = media.voices.length === maxVoices;
@@ -1185,6 +1512,16 @@
       preloadedEffect = src;
       effectPool.forEach((player) => {
         if (player.getAttribute('src') !== src) player.src = src;
+        player.load();
+      });
+    }
+
+    let pinchPreloaded = false;
+    function preloadPinch() {
+      if (pinchPreloaded) return;
+      pinchPreloaded = true;
+      pinchPool.forEach((player) => {
+        if (player.getAttribute('src') !== pinchDefault) player.src = pinchDefault;
         player.load();
       });
     }
@@ -1558,7 +1895,7 @@
       setAutoCutoutStatus('');
       byId('editor-cancel').focus();
       zoomControl.value = '1';
-      byId('editor-pan').checked = false;
+      setEditorTool('pan');
       try {
         const image = await loadImage(source);
         if (request !== photoRequest) return;
@@ -1567,7 +1904,8 @@
         bitmap.height = image.naturalHeight;
         const context = bitmap.getContext('2d', { willReadFrequently: true });
         if (!context) throw new Error();
-        editor = { image, bitmap, context, undo: [], x: 0, y: 0, gesture: null, autoApplied: false, restoring: false, autoBusy: false };
+        editor = { image, bitmap, context, undo: [], x: 0, y: 0, gesture: null, autoApplied: false, restoring: false, autoBusy: false, tool: 'pan', touchPoints: new Map(), pinch: null };
+        setEditorTool('pan');
         resetEditor();
         byId('editor-done').disabled = false;
         autoCutoutButton.disabled = false;
@@ -1579,8 +1917,8 @@
     function editorTransform() {
       const { width, height } = editor.bitmap;
       const scale = Math.min(editorView.width / width, editorView.height / height) * Number(zoomControl.value);
-      const overX = Math.max(0, (width * scale - editorView.width) / 2);
-      const overY = Math.max(0, (height * scale - editorView.height) / 2);
+      const overX = Math.max(editorView.width * .18, (width * scale - editorView.width) / 2);
+      const overY = Math.max(editorView.height * .18, (height * scale - editorView.height) / 2);
       editor.x = Math.min(overX, Math.max(-overX, editor.x));
       editor.y = Math.min(overY, Math.max(-overY, editor.y));
       return {
@@ -1599,7 +1937,6 @@
       byId('editor-undo').disabled = !editor.undo.length;
       restoreBrush.hidden = !editor.autoApplied;
       restoreBrush.setAttribute('aria-pressed', String(editor.restoring));
-      restoreBrush.textContent = editor.restoring ? '切换到橡皮擦' : '恢复笔';
     }
 
     function resetEditor() {
@@ -1679,10 +2016,44 @@
       if (undo.length > 20) undo.shift();
     }
 
+    function setEditorTool(tool, restoring = false) {
+      if (editor) {
+        editor.tool = tool;
+        editor.restoring = restoring;
+        editor.gesture = null;
+        editor.touchPoints.clear();
+        editor.pinch = null;
+      }
+      byId('editor-pan').setAttribute('aria-pressed', String(tool === 'pan'));
+      byId('editor-scale').setAttribute('aria-pressed', String(tool === 'zoom'));
+      byId('editor-erase').setAttribute('aria-pressed', String(tool === 'brush' && !restoring));
+      restoreBrush.setAttribute('aria-pressed', String(restoring));
+      byId('editor-zoom-control').hidden = tool !== 'zoom';
+    }
+
+    function pinchDistance() {
+      const [first, second] = editor.touchPoints.values();
+      return Math.hypot(first.x - second.x, first.y - second.y);
+    }
+
+    function setEditorZoom(value) {
+      zoomControl.value = String(Math.min(4, Math.max(1, value)));
+      drawEditor();
+    }
+
     function beginEdit(event, id) {
-      if (!editor || editor.gesture) return false;
+      if (!editor) return false;
       const point = editorPosition(event);
-      const pan = byId('editor-pan').checked;
+      if (editor.tool === 'zoom') {
+        if (!editor.touchPoints.has(id) && editor.touchPoints.size < 2) editor.touchPoints.set(id, point);
+        if (editor.touchPoints.size === 2 && !editor.pinch) {
+          const distance = pinchDistance();
+          if (distance > 0) editor.pinch = { distance, zoom: Number(zoomControl.value) };
+        }
+        return editor.touchPoints.has(id);
+      }
+      if (editor.gesture) return false;
+      const pan = editor.tool === 'pan';
       if (editor.autoBusy && !pan) return false;
       editor.gesture = { id, point, pan };
       if (!pan) {
@@ -1693,7 +2064,14 @@
     }
 
     function moveEdit(event, id) {
-      if (!editor || !editor.gesture || editor.gesture.id !== id) return;
+      if (!editor) return;
+      if (editor.tool === 'zoom') {
+        if (!editor.touchPoints.has(id)) return;
+        editor.touchPoints.set(id, editorPosition(event));
+        if (editor.pinch) setEditorZoom(editor.pinch.zoom * pinchDistance() / editor.pinch.distance);
+        return;
+      }
+      if (!editor.gesture || editor.gesture.id !== id) return;
       const point = editorPosition(event);
       const previous = editor.gesture.point;
       if (editor.gesture.pan) {
@@ -1707,7 +2085,9 @@
     }
 
     function endEdit(id) {
-      if (editor && editor.gesture && editor.gesture.id === id) editor.gesture = null;
+      if (!editor) return;
+      if (editor.touchPoints.delete(id)) editor.pinch = null;
+      if (editor.gesture && editor.gesture.id === id) editor.gesture = null;
     }
 
     editorView.addEventListener('pointerdown', (event) => {
@@ -1729,12 +2109,24 @@
         }, { passive: false });
       });
     }
-    zoomControl.addEventListener('input', drawEditor);
+    zoomControl.addEventListener('input', () => {
+      if (editor && editor.tool === 'zoom') drawEditor();
+    });
+    editorView.addEventListener('wheel', (event) => {
+      if (!editor) return;
+      if (editor.tool !== 'zoom') {
+        if (event.ctrlKey && event.cancelable) event.preventDefault();
+        return;
+      }
+      if (event.cancelable) event.preventDefault();
+      setEditorZoom(Number(zoomControl.value) * Math.exp(-event.deltaY * .002));
+    }, { passive: false });
+    byId('editor-pan').addEventListener('click', () => setEditorTool('pan'));
+    byId('editor-scale').addEventListener('click', () => setEditorTool('zoom'));
+    byId('editor-erase').addEventListener('click', () => setEditorTool('brush'));
     restoreBrush.addEventListener('click', () => {
       if (!editor || !editor.autoApplied) return;
-      editor.restoring = !editor.restoring;
-      if (editor.restoring) byId('editor-pan').checked = false;
-      drawEditor();
+      setEditorTool('brush', !editor.restoring);
     });
     byId('editor-undo').addEventListener('click', () => {
       if (!editor || !editor.undo.length) return;
@@ -2031,7 +2423,9 @@
         comboCount = 0;
         previousPat = -Infinity;
       }, 1200);
+      if (comboCount === 20) showComboLine();
       if (comboCount === 50) floatFeedback('♥', 'float big-heart');
+      if (comboCount === 100) showReactionRain();
       unlockAchievements(now);
     }
 
@@ -2214,21 +2608,47 @@
       const panel = byId(name);
       panel.hidden = !open;
       byId(name + '-toggle').setAttribute('aria-expanded', String(open));
-      if (name === 'settings') byId('countdown').setAttribute('aria-expanded', String(open));
+      if (name === 'settings') {
+        byId('countdown').setAttribute('aria-expanded', String(open));
+        byId('settings-backdrop').hidden = !open;
+        game.querySelectorAll('[data-settings-background]').forEach((item) => item.toggleAttribute('inert', open));
+        if (open) document.body.classList.add('settings-open');
+        else document.body.classList.remove('settings-open');
+      }
     }
 
     function setSettingsOpen(open) {
       if (open && byId('settings').hidden) {
         renderEventFields();
         settingsStatus('');
+        byId('settings').scrollTop = 0;
       }
       togglePanel('settings', open);
     }
 
-    byId('settings-toggle').addEventListener('click', () => setSettingsOpen(byId('settings').hidden));
-    byId('countdown').addEventListener('click', () => {
+    let settingsOpener;
+    function openSettings(opener, focusId) {
+      settingsOpener = opener;
       setSettingsOpen(true);
-      byId('settings-title').focus();
+      byId(focusId).focus();
+    }
+
+    function closeSettings() {
+      setSettingsOpen(false);
+      if (settingsOpener) settingsOpener.focus();
+    }
+
+    byId('settings-toggle').addEventListener('click', () => {
+      if (byId('settings').hidden) openSettings(byId('settings-toggle'), 'settings-heading');
+      else closeSettings();
+    });
+    byId('settings-close').addEventListener('click', closeSettings);
+    byId('settings-backdrop').addEventListener('click', closeSettings);
+    byId('settings').addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeSettings();
+    });
+    byId('countdown').addEventListener('click', () => {
+      openSettings(byId('countdown'), 'settings-title');
     });
     byId('achievements-toggle').addEventListener('click', () => {
       renderAchievements();
@@ -2337,7 +2757,7 @@
         title: state.title,
         today: todayCount().toLocaleString('zh-CN'),
         total: state.count.toLocaleString('zh-CN'),
-        wish: drawnToday(day) ? version.wishes[state.daily.index] : '今日还未抽签',
+        wish: version.wishes[dailyFortune(day)],
         cutout: media.cutRatio > 0
       };
       try {
@@ -2366,13 +2786,33 @@
       applyPalette();
     }
 
+    function applyInteraction(action) {
+      const pinch = action === 'pinch';
+      stage.classList.remove('patting');
+      stage.dataset.interaction = pinch ? 'pinch' : 'pat';
+      pet.setAttribute('aria-label', pinch ? '捏捏脸' : '摸摸头');
+      byId('game-intro').textContent = pinch ? version.intro.replace('摸摸头', '捏捏脸') : version.intro;
+      byId('action-pat').setAttribute('aria-pressed', String(!pinch));
+      byId('action-pinch').setAttribute('aria-pressed', String(pinch));
+    }
+
+    for (const action of ['pat', 'pinch']) {
+      byId('action-' + action).addEventListener('click', () => {
+        if (!version) return;
+        applyInteraction(action);
+        if (!writeSaved(version.key + '-interaction', action)) {
+          settingsStatus('本次互动方式已切换，浏览器未能保存。');
+        }
+      });
+    }
+
     function enterMode(selected, focusTitle = false) {
       if (selected !== 'star' && selected !== 'oshi') return;
       viewRevision++;
       mode = selected;
       version = versions[selected];
       document.body.dataset.skin = selected;
-      byId('game-intro').textContent = version.intro;
+      applyInteraction(readSaved(version.key + '-interaction'));
       chooser.hidden = true;
       game.hidden = false;
       showStatus('');
@@ -2397,6 +2837,7 @@
       version = null;
       clearTimeout(midnightTimer);
       pausePlayers(effectPool);
+      pausePlayers(pinchPool);
       resetVoice();
       closePhotoDialog(false);
       resetCombo();
@@ -2408,7 +2849,8 @@
       togglePanel('settings', false);
       togglePanel('achievements', false);
       stage.classList.remove('patting');
-      stage.querySelectorAll('.float').forEach((item) => item.remove());
+      stage.querySelectorAll('.float, .reaction, .combo-line').forEach((item) => item.remove());
+      game.querySelectorAll('.reaction-rain').forEach((item) => item.remove());
       hideQuoteBubble();
       setQuoteEditor(false);
       showQuoteStatus('');
@@ -2433,6 +2875,9 @@
         renderMedia();
       }
       if (event.key === version.key + '-quotes' || event.key === null) refreshQuotes();
+      if (event.key === version.key + '-interaction' || event.key === null) {
+        applyInteraction(readSaved(version.key + '-interaction'));
+      }
     });
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && version) {
@@ -2441,7 +2886,7 @@
       }
     });
     enterMode(readSaved(modeKey));
-    if (!version) preloadEffects(defaultAudio);
+    if (!version) { preloadEffects(defaultAudio); preloadPinch(); }
   </script>
 </body>
 </html>
