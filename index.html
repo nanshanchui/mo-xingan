@@ -121,7 +121,13 @@
       object-fit: cover;
       pointer-events: none;
     }
-    .photo { position: absolute; inset: 0; }
+    .photo-frame { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+    .photo {
+      position: absolute;
+      inset: 0;
+      border-radius: 0;
+      transform: translate(var(--photo-x, 0%), var(--photo-y, 0%)) scale(var(--photo-scale, 1));
+    }
     .pet:has(.photo:not([hidden])) .face { display: none !important; }
     .stage[data-cutout]::before { display: none; }
     .oshi-tip { display: none; margin: 6px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--soft); }
@@ -407,10 +413,11 @@
       }
     }
     .pet.cutout { padding: 0; border: 0; background: transparent; box-shadow: none; }
-    .pet.cutout .photo { border-radius: 0; object-fit: contain; object-position: center bottom; }
+    .pet.cutout .photo-frame { border-radius: 0; }
+    .pet.cutout .photo { border-radius: 0; object-fit: contain; object-position: center bottom; transform-origin: center bottom; }
     .stage[data-cutout] .hand {
-      top: calc(-26px + var(--head-offset, 0px));
-      left: calc(50% + var(--head-shift, 0px));
+      top: calc(-26px + var(--head-offset, 0px) + var(--head-placement-y, 0px));
+      left: calc(50% + var(--head-shift, 0px) + var(--head-placement-x, 0px));
     }
     .stage[data-cutout] .quote-bubble { bottom: calc(100% - 17px); }
     .combo {
@@ -613,8 +620,8 @@
       opacity: 0;
     }
     .stage[data-cutout][data-interaction="pinch"] .hand, .stage[data-cutout] .cheek-glow {
-      left: calc(50% + var(--head-shift, 0px) + var(--diameter) * .135);
-      top: calc(27px + var(--head-offset, 0px) + (var(--diameter) - var(--head-offset, 0px)) * .19);
+      left: calc(50% + var(--head-shift, 0px) + var(--cheek-placement-x));
+      top: calc(27px + var(--head-offset, 0px) + var(--cheek-placement-y));
     }
     .stage[data-interaction="pinch"] .hand {
       z-index: 3;
@@ -744,6 +751,21 @@
     .daily-fortune { position: relative; z-index: 2; }
     .daily-fortune .wish-title { color: var(--ui-title); font-size: 13px; text-align: right; }
     .daily-fortune .wish { margin: 5px 1px 0; padding: 0; border: 0; font-size: 14px; line-height: 1.55; }
+    .photo-position-target {
+      position: absolute;
+      z-index: 8;
+      inset: 0;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+    .photo-position-target:active { cursor: grabbing; }
+    .photo-position-controls { margin: 2px 0 9px; padding: 10px 12px; color: var(--ui-text); }
+    .photo-position-controls p { margin-bottom: 7px; }
+    .photo-position-zoom { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 13px; }
+    .photo-position-zoom input { flex: 1; min-width: 0; accent-color: var(--ui-title); }
+    .photo-position-zoom output { min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+    #adjust-photo:disabled { opacity: .48; }
     @supports (color: color-mix(in srgb, black, white)) {
       body[data-skin][data-palette] {
         --ui-glow: color-mix(in srgb, var(--accent) 23%, #ffeade);
@@ -855,7 +877,7 @@
             <path class="face-line" d="M68 108q10-14 20 0m44 0q10-14 20 0m-59 21q17 24 34 0" fill="none" stroke="#71452b" stroke-width="5.5" stroke-linecap="round"/>
             <path class="face-heart" d="M110 65c-9-4-11-13-5-15 3-1 5 1 5 3 1-2 3-4 6-3 6 2 3 11-6 15Z" fill="#d88466" opacity=".85"/>
           </svg>
-          <img class="photo" id="photo" alt="" draggable="false" hidden>
+          <span class="photo-frame"><img class="photo" id="photo" alt="" draggable="false" hidden></span>
         </button>
         <svg class="hand" aria-hidden="true" viewBox="0 0 140 86" fill="none">
           <path d="m122 7-23 12-16 3c-11 1-16 5-22 9l-32 8c-8 2-10 10-2 13L13 56c-8 2-8 12 0 14l22-3c-6 5-3 13 4 13l25-6c9 3 16 1 25-5l19-19 24-13c6-5 1-25-10-30Z"
@@ -866,6 +888,19 @@
         <span class="cheek-glow" aria-hidden="true"></span>
         <div class="quote-bubble" id="quote-bubble" role="status" aria-atomic="true" hidden></div>
         <span class="combo" id="combo" hidden></span>
+        <div class="photo-position-target" id="photo-position-target" aria-hidden="true" hidden></div>
+      </div>
+      <div class="card photo-position-controls" id="photo-position-controls" hidden>
+        <p class="caption">拖动心肝图片调整位置</p>
+        <label class="photo-position-zoom" for="photo-position-zoom">
+          缩放
+          <input id="photo-position-zoom" type="range" min="1" max="2.5" step=".01" value="1">
+          <output id="photo-position-value" for="photo-position-zoom">100%</output>
+        </label>
+        <div class="tool-row">
+          <button class="action primary" id="photo-position-done" type="button">完成</button>
+          <button class="action" id="photo-position-cancel" type="button">取消</button>
+        </div>
       </div>
 
 
@@ -952,6 +987,7 @@
           <div class="voice-actions">
             <span class="caption" id="voice-count">语音 0/3</span>
             <button class="action" id="reedit-photo" type="button" hidden>重新抠图</button>
+            <button class="action" id="adjust-photo" type="button" disabled>调整位置</button>
             <button class="action" id="pick-voice" type="button" title="每段最多 10 秒，支持 MP3、M4A">上传语音</button>
             <button class="action" id="clear-voice" type="button" disabled>清空语音</button>
             <input id="voice-input" type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" multiple hidden>
@@ -1471,14 +1507,175 @@
     byId('pick-audio').addEventListener('click', () => audioInput.click());
     byId('pick-voice').addEventListener('click', () => voiceInput.click());
 
+    const photoPositionTarget = byId('photo-position-target');
+    const photoPositionControls = byId('photo-position-controls');
+    const photoPositionZoom = byId('photo-position-zoom');
+    let photoPositionEdit = null;
+
+    function photoScaleLimits(isCutout) {
+      return isCutout ? [.7, 1.8] : [1, 2.5];
+    }
+
+    function clampPhotoPlacement(placement, cutRatio) {
+      const value = placement || {};
+      const isCutout = cutRatio > 0;
+      const [min, max] = photoScaleLimits(isCutout);
+      const scale = Math.max(min, Math.min(max, Number.isFinite(value.scale) ? value.scale : 1));
+      const limit = isCutout ? .35 : (scale - 1) / 2;
+      const height = cutRatio * scale;
+      // Keep part of a very short cutout visible even when it is dragged downward.
+      const lowerEdge = isCutout ? Math.min(limit, height - Math.min(.1, height / 2)) : limit;
+      const offset = (axis, maxOffset) => Number.isFinite(axis) ? Math.max(-limit, Math.min(maxOffset, axis)) : 0;
+      return { x: offset(value.x, limit), y: offset(value.y, lowerEdge), scale };
+    }
+
+    function paintPhotoPlacement(placement) {
+      const { x, y, scale } = placement;
+      stage.style.setProperty('--photo-x', `${x * 100}%`);
+      stage.style.setProperty('--photo-y', `${y * 100}%`);
+      stage.style.setProperty('--photo-scale', String(scale));
+      if (media.cutRatio > 0) {
+        // The cutout scales around its feet, so the head mark moves with its new height.
+        const headX = x + (scale - 1) * media.headShift;
+        const headY = y - (scale - 1) * media.cutRatio;
+        stage.style.setProperty('--head-placement-x', `calc(var(--diameter) * ${headX})`);
+        stage.style.setProperty('--head-placement-y', `calc(var(--diameter) * ${headY})`);
+        stage.style.setProperty('--cheek-placement-x', `calc(var(--diameter) * ${headX + .135 * scale})`);
+        stage.style.setProperty('--cheek-placement-y', `calc(var(--diameter) * ${headY + .19 * media.cutRatio * scale})`);
+      }
+      byId('photo-position-value').textContent = `${Math.round(scale * 100)}%`;
+    }
+
+    function endPhotoPlacement(focusStage = true) {
+      if (!photoPositionEdit) return;
+      photoPositionEdit = null;
+      photoPositionTarget.hidden = true;
+      photoPositionControls.hidden = true;
+      pet.disabled = false;
+      byId('settings-toggle').disabled = false;
+      byId('countdown').disabled = false;
+      paintPhotoPlacement(media.photoPlacement);
+      if (focusStage) pet.focus();
+    }
+
+    byId('adjust-photo').addEventListener('click', () => {
+      if (!media || !media.photo || photoPositionEdit) return;
+      const isCutout = media.cutRatio > 0;
+      photoPositionEdit = { photo: media.photo, cutRatio: media.cutRatio, placement: media.photoPlacement, drag: null };
+      const [min, max] = photoScaleLimits(isCutout);
+      photoPositionZoom.min = String(min);
+      photoPositionZoom.max = String(max);
+      photoPositionZoom.value = String(photoPositionEdit.placement.scale);
+      setSettingsOpen(false);
+      stage.classList.remove('patting');
+      pet.disabled = true;
+      byId('settings-toggle').disabled = true;
+      byId('countdown').disabled = true;
+      photoPositionTarget.hidden = false;
+      photoPositionControls.hidden = false;
+      showStatus('');
+      paintPhotoPlacement(photoPositionEdit.placement);
+      // Keep the stage in view when the controls appear at the bottom of a small screen.
+      byId('photo-position-done').focus({ preventScroll: true });
+    });
+
+    byId('photo-position-done').addEventListener('click', () => {
+      if (!photoPositionEdit) return;
+      const latest = readMedia();
+      if (latest.photo !== photoPositionEdit.photo || latest.cutRatio !== photoPositionEdit.cutRatio) {
+        media = latest;
+        endPhotoPlacement();
+        renderMedia();
+        showStatus('心肝图片已换，请重新调整位置。');
+        return;
+      }
+      if (!saveMedia({ ...latest, photoPlacement: photoPositionEdit.placement })) {
+        showStatus('未能保存位置，请重试，或取消本次调整。');
+        return;
+      }
+      endPhotoPlacement();
+      showStatus('');
+    });
+
+    function cancelPhotoPlacement() {
+      endPhotoPlacement();
+      showStatus('');
+    }
+
+    byId('photo-position-cancel').addEventListener('click', cancelPhotoPlacement);
+    photoPositionControls.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') cancelPhotoPlacement();
+    });
+
+    photoPositionZoom.addEventListener('input', () => {
+      if (!photoPositionEdit) return;
+      const edit = photoPositionEdit;
+      edit.placement = clampPhotoPlacement({ ...edit.placement, scale: Number(photoPositionZoom.value) }, edit.cutRatio);
+      paintPhotoPlacement(edit.placement);
+    });
+
+    function startPhotoDrag(event, id) {
+      if (!photoPositionEdit || photoPositionEdit.drag) return false;
+      const diameter = pet.getBoundingClientRect().width;
+      if (!diameter) return false;
+      const { x, y } = photoPositionEdit.placement;
+      photoPositionEdit.drag = { id, x, y, diameter, clientX: event.clientX, clientY: event.clientY };
+      return true;
+    }
+
+    function movePhotoDrag(event, id) {
+      const edit = photoPositionEdit;
+      if (!edit || !edit.drag || edit.drag.id !== id) return;
+      const { x, y, diameter, clientX, clientY } = edit.drag;
+      edit.placement = clampPhotoPlacement({
+        x: x + (event.clientX - clientX) / diameter,
+        y: y + (event.clientY - clientY) / diameter,
+        scale: edit.placement.scale
+      }, edit.cutRatio);
+      paintPhotoPlacement(edit.placement);
+    }
+
+    function endPhotoDrag(id) {
+      if (photoPositionEdit && photoPositionEdit.drag && photoPositionEdit.drag.id === id) photoPositionEdit.drag = null;
+    }
+
+    photoPositionTarget.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0 || !startPhotoDrag(event, event.pointerId)) return;
+      event.preventDefault();
+      photoPositionTarget.setPointerCapture(event.pointerId);
+    });
+    photoPositionTarget.addEventListener('pointermove', (event) => movePhotoDrag(event, event.pointerId));
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((type) => {
+      photoPositionTarget.addEventListener(type, (event) => endPhotoDrag(event.pointerId));
+    });
+    if (!window.PointerEvent) {
+      ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach((type) => {
+        photoPositionTarget.addEventListener(type, (event) => {
+          if (event.cancelable) event.preventDefault();
+          Array.from(event.changedTouches).forEach((touch) => {
+            if (type === 'touchstart') startPhotoDrag(touch, touch.identifier);
+            else if (type === 'touchmove') movePhotoDrag(touch, touch.identifier);
+            else endPhotoDrag(touch.identifier);
+          });
+        }, { passive: false });
+      });
+      photoPositionTarget.addEventListener('mousedown', (event) => {
+        if (event.button === 0 && startPhotoDrag(event, 'mouse')) event.preventDefault();
+      });
+      window.addEventListener('mousemove', (event) => movePhotoDrag(event, 'mouse'));
+      window.addEventListener('mouseup', () => endPhotoDrag('mouse'));
+    }
+
     function readMedia() {
       const saved = readSaved(version.key + '-media') || {};
       const isAudio = (url) => typeof url === 'string' && url.startsWith('data:audio/');
+      const cutRatio = typeof saved.cutRatio === 'number' && saved.cutRatio > 0 && saved.cutRatio <= 1 ? saved.cutRatio : 0;
       return {
         photo: typeof saved.photo === 'string' && saved.photo.startsWith('data:image/') ? saved.photo : '',
         original: typeof saved.original === 'string' && saved.original.startsWith('data:image/') ? saved.original : '',
-        cutRatio: typeof saved.cutRatio === 'number' && saved.cutRatio > 0 && saved.cutRatio <= 1 ? saved.cutRatio : 0,
+        cutRatio,
         headShift: Number.isFinite(saved.headShift) && Math.abs(saved.headShift) <= .5 ? saved.headShift : 0,
+        photoPlacement: clampPhotoPlacement(saved.photoPlacement, cutRatio),
         effect: isAudio(saved.effect) ? saved.effect : '',
         voices: Array.isArray(saved.voices) ? saved.voices.filter(isAudio).slice(0, maxVoices) : []
       };
@@ -1490,11 +1687,16 @@
       photo.hidden = !media.photo;
       byId('face').hidden = !!media.photo;
       byId('reedit-photo').hidden = !media.photo;
+      byId('adjust-photo').disabled = !media.photo;
       const isCutout = !!media.photo && media.cutRatio > 0;
       pet.classList[isCutout ? 'add' : 'remove']('cutout');
       stage.toggleAttribute('data-cutout', isCutout);
       stage.style.setProperty('--head-offset', `calc(var(--diameter) * ${1 - media.cutRatio})`);
       stage.style.setProperty('--head-shift', `calc(var(--diameter) * ${media.headShift})`);
+      if (photoPositionEdit && (photoPositionEdit.photo !== media.photo || photoPositionEdit.cutRatio !== media.cutRatio)) {
+        endPhotoPlacement(false);
+      }
+      paintPhotoPlacement(photoPositionEdit ? photoPositionEdit.placement : media.photoPlacement);
       preloadEffects(media.effect || defaultAudio);
       preloadPinch();
       byId('audio-label').textContent = media.effect ? '更换音效' : '上传音效';
@@ -1862,7 +2064,10 @@
     });
 
     function commitPhoto(src, original = '', cutRatio = 0, headShift = 0) {
-      if (!saveMedia({ ...readMedia(), photo: src, original, cutRatio, headShift })) {
+      const latest = readMedia();
+      const samePhoto = latest.photo === src && latest.cutRatio === cutRatio;
+      const photoPlacement = samePhoto ? latest.photoPlacement : clampPhotoPlacement(null, cutRatio);
+      if (!saveMedia({ ...latest, photo: src, original, cutRatio, headShift, photoPlacement })) {
         photoStatus('照片太大或浏览器存储不可用，保存失败。可以试试更小的照片。');
         return;
       }
@@ -2708,16 +2913,20 @@
         const y = 198;
         const w = image.naturalWidth;
         const h = image.naturalHeight;
-        const scale = info.cutout ? Math.min(edge / w, edge / h) : Math.max(edge / w, edge / h);
-        const width = w * scale;
-        const height = h * scale;
+        const fit = info.cutout ? Math.min(edge / w, edge / h) : Math.max(edge / w, edge / h);
+        const placement = info.photoPlacement;
+        const width = w * fit * placement.scale;
+        const height = h * fit * placement.scale;
+        const top = info.cutout ? y + edge - height : y + (edge - height) / 2;
         context.save();
-        if (!info.cutout) {
-          context.beginPath();
-          context.arc(375, y + edge / 2, edge / 2, 0, Math.PI * 2);
-          context.clip();
-        }
-        context.drawImage(image, x + (edge - width) / 2, y + (edge - height) / 2, width, height);
+        context.beginPath();
+        if (info.cutout) context.rect(x, y, edge, edge);
+        else context.arc(375, y + edge / 2, edge / 2, 0, Math.PI * 2);
+        context.clip();
+        context.drawImage(
+          image, x + (edge - width) / 2 + placement.x * edge,
+          top + placement.y * edge, width, height
+        );
         context.restore();
       }
       const offset = image ? 0 : -130;
@@ -2758,7 +2967,8 @@
         today: todayCount().toLocaleString('zh-CN'),
         total: state.count.toLocaleString('zh-CN'),
         wish: version.wishes[dailyFortune(day)],
-        cutout: media.cutRatio > 0
+        cutout: media.cutRatio > 0,
+        photoPlacement: media.photoPlacement
       };
       try {
         const image = media.photo ? await loadImage(media.photo) : null;
@@ -2832,6 +3042,7 @@
       button.addEventListener('click', () => enterMode(button.dataset.version, true));
     });
     byId('switch-version').addEventListener('click', () => {
+      endPhotoPlacement(false);
       viewRevision++;
       mode = '';
       version = null;
